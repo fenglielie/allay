@@ -1,7 +1,7 @@
 add_executable(mparser_demo mparser_demo.cpp)
 target_link_libraries(mparser_demo PRIVATE mparser)
 
-add_test(NAME mparser_demo_f COMMAND mparser_demo)
+add_test(NAME mparser_demo_f COMMAND mparser_demo -g)
 set_property(TEST mparser_demo_f PROPERTY WILL_FAIL TRUE)
 
 add_test(NAME mparser_demo_1 COMMAND mparser_demo --scale 1.0)
