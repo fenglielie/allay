@@ -43,3 +43,5 @@ install(EXPORT allayTargets
         NAMESPACE allay::
         DESTINATION lib/cmake/allay)
 install(DIRECTORY include/allay DESTINATION include)
+
+zero_check_update()
