@@ -17,12 +17,15 @@
 
 #include <windows.h>
 
+#endif
+
 #include <optional>
 #include <string>
 
 class WindowsConsole {
 public:
     static int init() noexcept {
+#ifdef _WIN32
         try {
             SetConsoleOutputCP(65001);
             SetConsoleCP(65001);
@@ -41,31 +44,42 @@ public:
         catch (...) {
             return -1;
         }
+#endif
         return 0;
     }
 
     // Use Windows API to read wide characters from the console and convert to
     // UTF-8.
-    static std::optional<std::string> utf8_input(int wide_buf_size) {
-        if (wide_buf_size < 64) { wide_buf_size = 64; }
-        int utf8_buf_size = wide_buf_size * 4;
+    static std::optional<std::string> utf8_input() {
+#ifdef _WIN32
+        HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE);
+        if (hIn == INVALID_HANDLE_VALUE) { return std::nullopt; }
 
-        std::wstring wide_buffer(wide_buf_size, L'\0');
-        DWORD read_len = 0;
-        if (ReadConsoleW(GetStdHandle(STD_INPUT_HANDLE), wide_buffer.data(),
-                         wide_buf_size, &read_len, nullptr)
-            == 0) {  // Reading failed
-            printf("fail 1\n");
-            return std::nullopt;
+        std::wstring wide_buffer;
+        std::wstring temp_buf(128, L'\0');  // 小块缓冲区读取
+
+        while (true) {
+            DWORD chars_read = 0;
+            if ((ReadConsoleW(hIn, temp_buf.data(), 128, &chars_read, nullptr)
+                 == 0)
+                || chars_read == 0) {
+                break;
+            }
+            wide_buffer.append(temp_buf, 0, chars_read);
+            if (chars_read < 128) {  // 说明输入结束
+                break;
+            }
         }
 
+        if (wide_buffer.empty()) { return std::nullopt; }
+
+        int utf8_buf_size = static_cast<int>(wide_buffer.size()) * 4;
         std::string utf8_buffer(utf8_buf_size, '\0');
         BOOL use_default_char = 0;
-
-        // Convert wide char to UTF-8
-        int len = WideCharToMultiByte(
-            CP_UTF8, 0, wide_buffer.c_str(), static_cast<int>(read_len),
-            utf8_buffer.data(), utf8_buf_size, nullptr, &use_default_char);
+        int len = WideCharToMultiByte(CP_UTF8, 0, wide_buffer.data(),
+                                      static_cast<int>(wide_buffer.size()),
+                                      utf8_buffer.data(), utf8_buf_size,
+                                      nullptr, &use_default_char);
         if (use_default_char != 0 || len == 0) {  // Conversion failed
             return std::nullopt;
         }
@@ -77,6 +91,10 @@ public:
         }
 
         return utf8_buffer.substr(0, len - 2);  // Remove CRLF
+#else
+        std::string input;
+        if (!std::getline(std::cin, input)) { return std::nullopt; }
+        return input;
+#endif
     }
 };
-#endif

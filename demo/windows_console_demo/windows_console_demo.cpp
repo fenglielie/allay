@@ -11,7 +11,7 @@ int main() {
     std::cout << "测试 ｱｲｳｴｵ 😅🤣" << " | " << str1 << '\n';
 
     std::cout << "test utf8 input:\n";
-    auto input = WindowsConsole::utf8_input(256);
+    auto input = WindowsConsole::utf8_input();
     if (input.has_value()) {
         std::cout << "input = \"" << input->c_str() << "\"\n";
         std::cout << "len = " << input->size() << '\n';
