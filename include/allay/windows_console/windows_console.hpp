@@ -19,6 +19,10 @@
 
 #endif
 
+#ifndef _WIN32
+#include <iostream>
+#endif
+
 #include <optional>
 #include <string>
 
