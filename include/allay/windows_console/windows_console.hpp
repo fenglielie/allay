@@ -49,30 +49,33 @@ public:
             return -1;
         }
 #endif
+
+        init_flag = true;
         return 0;
     }
 
+    // Get utf8 input:
     // Use Windows API to read wide characters from the console and convert to
-    // UTF-8.
+    // UTF-8 on Windows.
+    // Use std::getline on Linux, directly.
     static std::optional<std::string> utf8_input() {
+        if (!init_flag) { init(); }
+
 #ifdef _WIN32
         HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE);
         if (hIn == INVALID_HANDLE_VALUE) { return std::nullopt; }
 
         std::wstring wide_buffer;
-        std::wstring temp_buf(128, L'\0');  // 小块缓冲区读取
+        std::wstring temp_buf(128, L'\0');
 
         while (true) {
-            DWORD chars_read = 0;
-            if ((ReadConsoleW(hIn, temp_buf.data(), 128, &chars_read, nullptr)
-                 == 0)
-                || chars_read == 0) {
+            DWORD cnt = 0;
+            if ((ReadConsoleW(hIn, temp_buf.data(), 128, &cnt, nullptr) == 0)
+                || cnt == 0) {
                 break;
             }
-            wide_buffer.append(temp_buf, 0, chars_read);
-            if (chars_read < 128) {  // 说明输入结束
-                break;
-            }
+            wide_buffer.append(temp_buf, 0, cnt);
+            if (cnt < 128) { break; }
         }
 
         if (wide_buffer.empty()) { return std::nullopt; }
@@ -84,14 +87,13 @@ public:
                                       static_cast<int>(wide_buffer.size()),
                                       utf8_buffer.data(), utf8_buf_size,
                                       nullptr, &use_default_char);
-        if (use_default_char != 0 || len == 0) {  // Conversion failed
-            return std::nullopt;
+        if (use_default_char != 0 || len == 0) {
+            return std::nullopt;  // Conversion failed
         }
 
         if (len < 2 || utf8_buffer[len - 2] != '\r'
             || utf8_buffer[len - 1] != '\n') {
-            // Invalid result, missing CRLF at the end
-            return std::nullopt;
+            return std::nullopt;  // Invalid, missing CRLF at the end
         }
 
         return utf8_buffer.substr(0, len - 2);  // Remove CRLF
@@ -101,4 +103,7 @@ public:
         return input;
 #endif
     }
+
+private:
+    inline static bool init_flag = false;
 };
