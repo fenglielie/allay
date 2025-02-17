@@ -169,7 +169,7 @@ macro(zero_check_update)
 
     # Compare local and remote hashes
     file(SHA256 "${LOCAL_FILE}" LOCAL_HASH)
-    if("${LOCAL_HASH}" STREQUAL "${REMOTE_HASH}")
+    if("${LOCAL_HASH}" STREQUAL "${ZERO_CMAKE_REMOTE_HASH}")
         # [OK] the local file matches the cached remote hash
         message(STATUS ">> ${LOCAL_FILE} is up to date.")
     else()
