@@ -12,7 +12,7 @@
 
 2. **选项解析**
    - 支持带值的选项，例如 `--scale=2.0` 或 `--scale 2.0`
-   - 选项可以设置为可选或必选，在解析过程中会对选项出现的次数计数，
+   - 选项可以设置为可选或必选，在解析过程中会记录每次出现的选项的值
    - 支持的数据类型包括：`int`、`double`、`bool`、`string`、`char`、`size_t`
    - 支持四种添加方式
      1. 提供默认值，提供回调函数检查
@@ -49,7 +49,7 @@ parser.add_flag({"--help","-h"}, "show help message", [&parser]() {
 });
 ```
 
-在解析开始之前，如果没有设置名称为`--help`或`-h`的选项，会自动按照上述形式进行添加。
+在解析开始之前，如果没有设置名称为`--help`或`-h`的flag或option，会自动按照上述形式进行添加。
 
 ### 添加option
 
@@ -65,7 +65,7 @@ parser.add_option({"-n", "--num"}, "option with default value", false, 0);
 parser.add_option<double>("--scale", "option with checker", true,
                             [](double arg) { return arg >= 0; });
 
-parser.add_option<int>({"-q", "--quiet"},
+parser.add_option<int>({"-w", "--weight"},
                         "option without default value and checker", false);
 ```
 
@@ -102,20 +102,31 @@ void parse_check(int argc, char *argv[]) {
 
 ### 获取参数
 
-对于flag和option，可以获取解析过程中出现的次数（通过完整名称或缩写均可）
+对于flag，可以获取解析过程中出现的次数（通过完整名称或缩写均可）
 ```cpp
 if (auto n = parser.get_count("--gzip")) {
     std::cout << "gzip count: " << n.value() << '\n';
 }
 ```
 
-对于option，还可以获取对应的值，但是需要提供类型信息，并且这个类型需要和解析之前提供的一致
+对于option，可以获取对应的值，但是需要提供类型信息，并且这个类型需要和解析之前提供的一致
 ```cpp
 std::cout << "Scale: " << parser.get_option<double>("--scale").value()
             << '\n';
 std::cout << "Len: " << parser.get_option<int>("--len").value() << '\n';
 ```
 
+如果option被多次设置，那么`get_option`只会获取最后一次的值，可以可以通过`get_option_all`获取设置的所有值，返回对应的`vector`。
+
+```cpp
+if (auto weights = parser.get_option_all<int>("-w")) {
+    std::cout << "Weight: ";
+    for (const auto &w : *weights) { std::cout << w << ' '; }
+    std::cout << '\n';
+}
+```
+
+某些情况下可能出现option没有值，此时`get_option`会返回一个`std::nullopt`，但是`get_option_all`会返回一个空的`vector`。
 
 ### 收集多余参数
 
@@ -126,7 +137,6 @@ for (const auto &s : rest) {
     std::cout << s << '\n';
 }
 ```
-
 
 ### 辅助方法
 
@@ -142,7 +152,7 @@ parser.print_usage();
 
 帮助信息例如
 ```
-usage: ./demo --scale=double ...
+usage: demo --scale=double ...
  @required options:
    --scale          option with checker (double)
  @options:

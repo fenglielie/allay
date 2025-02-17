@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
     parser.add_option<double>("--scale", "option with checker", true,
                               [](double arg) { return arg >= 0; });
 
-    parser.add_option<int>({"-q", "--quiet"},
+    parser.add_option<int>({"-w", "--weight"},
                            "option without default value and checker", false);
 
     parser.add_flag({"--help", "-h"}, "print help message", [&parser]() {
@@ -37,7 +37,14 @@ int main(int argc, char *argv[]) {
 
     std::cout << "Scale: " << parser.get_option<double>("--scale").value()
               << '\n';
-    std::cout << "Len: " << parser.get_option<double>("--len").value_or(0) << '\n';
+    std::cout << "Len: " << parser.get_option<double>("--len").value_or(0)
+              << '\n';
+
+    if (auto weights = parser.get_option_all<int>("-w")) {
+        std::cout << "Weight: ";
+        for (const auto &w : *weights) { std::cout << w << ' '; }
+        std::cout << '\n';
+    }
 
     if (auto n = parser.get_count("--gzip")) {
         std::cout << "gzip count: " << n.value() << '\n';

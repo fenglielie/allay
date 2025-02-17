@@ -182,7 +182,7 @@ public:
                                       .type_id = type_id,
                                       .default_value_str = default_value_str,
                                       .required = required,
-                                      .value_str = default_value_str,
+                                      .value_list = {default_value_str},
                                   }});
 
         return *this;
@@ -211,7 +211,7 @@ public:
                                       .type_id = type_id,
                                       .default_value_str = "",
                                       .required = required,
-                                      .value_str = "",
+                                      .value_list = {},
                                   }});
 
         return *this;
@@ -232,28 +232,56 @@ public:
         return add_option<T>(option, desc, required, [](T) { return true; });
     }
 
-    // 获取标志或选项的计数，如果名称不存在，返回空
+    // 获取标志的计数，如果名称不存在，返回空
     std::optional<size_t> get_count(const std::string &name) const {
         if (const auto *p_flag = get_flag_via_name(name)) {
             return m_flags.at(*p_flag).count;
         }
 
-        if (const auto *p_option = get_option_via_name(name)) {
-            return m_options.at(*p_option).count;
-        }
-
         return std::nullopt;
     }
 
-    // 获取选项的值，如果选项名称不存在，或者类型不匹配，返回空
+    // 获取选项最后设置的值，如果选项名称不存在，或者类型不匹配，返回空
     template <mparser_detail::Supported T>
     std::optional<T> get_option(const std::string &name) {
         if (const auto *p_option = get_option_via_name(name)) {  // 要求名称存在
             std::string cur_type_id = mparser_detail::get_type_id<T>();
             if (m_options.at(*p_option).type_id
                 == cur_type_id) {  // 要求类型一致
-                return mparser_detail::case_string_to<T>(
-                    m_options.at(*p_option).value_str);
+                auto &value_list = m_options.at(*p_option).value_list;
+
+                // 异常情况下会为空
+                if (value_list.empty()) { return std::nullopt; }
+
+                // 获取最后一个值
+                auto last_value_str = value_list.back();
+                return mparser_detail::case_string_to<T>(last_value_str);
+            }
+        }
+        return std::nullopt;
+    }
+
+    // 获取选项所有设置的值，如果选项名称不存在，或者类型不匹配，返回空
+    template <mparser_detail::Supported T>
+    std::optional<std::vector<T>> get_option_all(const std::string &name) {
+        if (const auto *p_option = get_option_via_name(name)) {  // 要求名称存在
+            std::string cur_type_id = mparser_detail::get_type_id<T>();
+            if (m_options.at(*p_option).type_id
+                == cur_type_id) {  // 要求类型一致
+                auto &value_list = m_options.at(*p_option).value_list;
+
+                // 异常情况下会为空，此时返回空列表
+                if (value_list.empty()) { return std::vector<T>{}; }
+
+                // 获取所有的值
+                std::vector<T> result;
+                for (auto &value_str : value_list) {
+                    auto parsed = mparser_detail::case_string_to<T>(value_str);
+                    if (!parsed.has_value()) { return std::nullopt; }
+                    result.push_back(parsed.value());
+                }
+
+                return result;
             }
         }
         return std::nullopt;
@@ -264,8 +292,8 @@ public:
         if (m_program_name.empty()) { set_program_name(argv[0]); }
 
         // 如果解析之前没有设置--help或-h，自动添加一个默认的--help选项
-        if ((get_flag_via_name("--help") == nullptr)
-            && (get_flag_via_name("-h") == nullptr)) {
+        if (!(m_unique_names.contains("--help")
+              || m_unique_names.contains("-h"))) {
             add_flag({"--help", "-h"}, "print help message", [this]() {
                 print_usage();
                 exit(0);
@@ -306,7 +334,7 @@ public:
             std::string full_desc;
             if (!info.desc.empty()) {  // 有描述信息
                 // 如果必要，并且存在默认值
-                if (!info.required && !info.default_value_str.empty()) {
+                if (!(info.required || info.default_value_str.empty())) {
                     full_desc = info.desc + " (" + info.type_id
                                 + " [=" + info.default_value_str + "])";
                 }
@@ -385,8 +413,8 @@ private:
         const std::string default_value_str;  // 默认值
         const bool required{false};           // 是否的必要参数
 
-        std::string value_str;  // 当前值
-        size_t count{0};  // 不仅在命令行参数中存在，而且要求被成功赋值
+        std::vector<std::string>
+            value_list;  // 支持多次设置，每次的值都会被记录
     };
 
     struct FlagInfo {
@@ -504,8 +532,7 @@ private:
 
                     // 调用选项的检查函数
                     if (m_options.at(*p_option).checker(value)) {
-                        m_options.at(*p_option).value_str = value;
-                        m_options.at(*p_option).count++;
+                        m_options.at(*p_option).value_list.push_back(value);
                     }
                     else {  // 转换或检查失败
                         std::string msg = "Failed to set option with value: "
@@ -527,7 +554,7 @@ private:
 
             // 检查必需的选项是否提供
             for (const auto &[option, info] : m_options) {
-                if (info.required && (info.count == 0)) {
+                if (info.required && (info.value_list.empty())) {
                     throw std::runtime_error("Missing required option: "
                                              + option.to_str());
                 }
