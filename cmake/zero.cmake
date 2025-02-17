@@ -86,9 +86,9 @@ macro(zero_init_quiet)
 
     # c/c++ compile flags
     if (("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang"))
-        set(common_flags  "-Wall -Wextra -Wfatal-errors -Wshadow -Wno-unused-parameter")
+        set(common_flags "-Wall -Wextra -Wfatal-errors -Wshadow -Wconversion -Wsign-conversion -Wuninitialized -pedantic -Wno-unused-parameter")
     elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-        set(common_flags "/W3 /WX /MP /utf-8")
+        set(common_flags "/W3 /WX /MP /utf-8 /permissive- /Zc:__cplusplus")
     else()
         set(common_flags "")
     endif()
@@ -119,45 +119,62 @@ endmacro()
 macro(zero_check_update)
     set(TEMP_FILE "${CMAKE_BINARY_DIR}/zero.cmake")
     set(REMOTE_URL "https://raw.githubusercontent.com/fenglielie/cmakezero/main/cmake/zero.cmake")
-
     set(LOCAL_FILE "${ZERO_CMAKE_FILE}")
 
     set(ZERO_CMAKE_REMOTE_HASH "" CACHE STRING "Cached hash of the remote zero.cmake. (set by zero.cmake)")
 
-    # Return if local file doesn't exist
+    # [FAIL] Return if local file doesn't exist
     if(NOT (EXISTS "${LOCAL_FILE}"))
         message(WARNING "Local file ${LOCAL_FILE} does not exist.")
         return()
     endif()
 
-    file(SHA256 "${LOCAL_FILE}" LOCAL_HASH)
-
-    # Skip download if the local file matches the cached remote hash
-    if("${LOCAL_HASH}" STREQUAL "${ZERO_CMAKE_REMOTE_HASH}")
-        message(STATUS ">> ${LOCAL_FILE} is up to date.")
+    # [FAIL] Skip download if download failed previously
+    if("${ZERO_CMAKE_REMOTE_HASH}" STREQUAL "DOWNLOAD_FAILED")
+        message(STATUS ">> Skipping update check due to a previous download failure.")
         return()
     endif()
 
-    # Download the remote file
-    message(STATUS ">> Downloading ${REMOTE_URL}")
-    file(DOWNLOAD "${REMOTE_URL}" "${TEMP_FILE}" STATUS DOWNLOAD_STATUS SHOW_PROGRESS TIMEOUT 20)
+    set(NEED_DOWNLOAD TRUE)
 
-    # Check if the download was successful
-    list(GET DOWNLOAD_STATUS 0 DOWNLOAD_RESULT)
-    if(NOT DOWNLOAD_RESULT EQUAL 0)
-        message(STATUS ">> Download failed. Status: ${DOWNLOAD_STATUS}")
-        message(STATUS ">> Don't worry. This does not affect the build process.")
-        return()
+    # Skip download if the remote file matches the cached local hash
+    if(EXISTS "${TEMP_FILE}")
+        file(SHA256 "${TEMP_FILE}" REMOTE_HASH_OLD)
+        if("${REMOTE_HASH_OLD}" STREQUAL "${ZERO_CMAKE_REMOTE_HASH}")
+            set(NEED_DOWNLOAD FALSE)
+        endif()
     endif()
 
-    file(SHA256 "${TEMP_FILE}" REMOTE_HASH)
-    set(ZERO_CMAKE_REMOTE_HASH "${REMOTE_HASH}" CACHE STRING "Cached hash of the remote zero.cmake. (set by zero.cmake)" FORCE)
+    if(NEED_DOWNLOAD)
+        # Download the remote file
+        message(STATUS ">> Downloading ${REMOTE_URL}")
+        file(DOWNLOAD "${REMOTE_URL}" "${TEMP_FILE}" STATUS DOWNLOAD_STATUS SHOW_PROGRESS TIMEOUT 20)
+
+        # Check if the download was successful
+        list(GET DOWNLOAD_STATUS 0 DOWNLOAD_RESULT)
+
+        # [FAIL] Download failed
+        if(NOT DOWNLOAD_RESULT EQUAL 0)
+            message(STATUS ">> Download failed. Status: ${DOWNLOAD_STATUS}")
+            message(STATUS ">> Don't worry. This does not affect the usage.")
+
+            set(ZERO_CMAKE_REMOTE_HASH "DOWNLOAD_FAILED" CACHE STRING "Cached hash of the remote zero.cmake. (set by zero.cmake)")
+            return()
+        endif()
+
+        # update the hash
+        file(SHA256 "${TEMP_FILE}" REMOTE_HASH)
+        set(ZERO_CMAKE_REMOTE_HASH "${REMOTE_HASH}" CACHE STRING "Cached hash of the remote zero.cmake. (set by zero.cmake)" FORCE)
+    endif()
 
     # Compare local and remote hashes
-    if(NOT "${LOCAL_HASH}" STREQUAL "${REMOTE_HASH}")
-        message(WARNING "A newer version is available: ${TEMP_FILE}")
-    else()
+    file(SHA256 "${LOCAL_FILE}" LOCAL_HASH)
+    if("${LOCAL_HASH}" STREQUAL "${REMOTE_HASH}")
+        # [OK] the local file matches the cached remote hash
         message(STATUS ">> ${LOCAL_FILE} is up to date.")
+    else()
+        # [FAIL] need update
+        message(WARNING "A newer version is available: ${TEMP_FILE}")
     endif()
 endmacro()
 
