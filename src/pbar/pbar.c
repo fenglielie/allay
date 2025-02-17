@@ -14,7 +14,7 @@
 static LARGE_INTEGER freq;  // time frequency
 #endif
 
-static void pbar_time_init() {
+static void pbar_time_init(void) {
 #ifdef _WIN32
     QueryPerformanceFrequency(&freq);
 #endif
@@ -141,16 +141,16 @@ static void pbar_update_detail(pbar *pb, double arg_now, int stage_num,
         (pb->last_rate > 0) ? (pb->arg_end - pb->last_arg) / pb->last_rate : 0;
     double cost_time = pbar_time_cost(pb);
 
-    char color_label_buffer[20] = {};
+    char color_label_buffer[20] = {0};
     color_label(pct, color_label_buffer, 20);
 
-    char cost_time_buffer[20] = {};
+    char cost_time_buffer[20] = {0};
     time_str(cost_time, cost_time_buffer, 20);
 
-    char eta_time_buffer[20] = {};
+    char eta_time_buffer[20] = {0};
     time_str(eta_time, eta_time_buffer, 20);
 
-    char bar[BLOCK_NUM + 1] = {};
+    char bar[BLOCK_NUM + 1] = {0};
     pct_bar(pct, bar, BLOCK_NUM + 1);
 
     switch (pb->format) {

@@ -4,13 +4,13 @@
 
 static void common_sleep(int ms) {
 #ifdef _WIN32
-    Sleep(ms);
+    Sleep((DWORD)ms);
 #else
     usleep(ms * 1000);
 #endif
 }
 
-int main() {
+int main(void) {
     pbar demo;
     pbar_init(&demo, 2.0, PCT_BAR_ARG_TIME);
 

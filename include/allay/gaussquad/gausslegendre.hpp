@@ -67,8 +67,8 @@ inline auto gausslegendre(unsigned int n)
 
 // Gauss-Legendre nodes and weights (compile time version)
 template <unsigned int N>
-consteval auto gausslegendre()
-    -> std::pair<std::array<double, N>, std::array<double, N>> {
+consteval auto
+gausslegendre() -> std::pair<std::array<double, N>, std::array<double, N>> {
     static_assert(N >= 2, "N must be >= 2");
     constexpr double pi = std::numbers::pi;
 

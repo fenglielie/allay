@@ -49,7 +49,7 @@ public:
     }
 
 private:
-    static constexpr int block_num = 20;
+    static constexpr size_t block_num = 20;
     static constexpr char fill_char = '#';
     static constexpr double alpha = 0.4;  // Smoothing factor
 
@@ -200,8 +200,8 @@ private:
     }
 
     static std::string pct_bar(double pct) {
-        int filled_num =
-            std::clamp(static_cast<int>(pct * block_num), 0, block_num);
+        size_t filled_num = std::clamp(static_cast<size_t>(pct * block_num),
+                                       static_cast<size_t>(0), block_num);
         return std::string(filled_num, fill_char)
                + std::string(block_num - filled_num, ' ');
     }

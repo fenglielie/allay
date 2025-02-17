@@ -69,7 +69,7 @@ private:
 
         for (uint32_t i = 0; i < m_thread_num; ++i) {
             // 向线程池中填充默认任务
-            m_pool.emplace_back([this]() {        // 必须显式捕获this指针
+            m_pool.emplace_back([this]() {  // 必须显式捕获this指针
                 while (this->m_running.load()) {  // 线程池开启时无法跳出循环
                     std::packaged_task<void()> task;
 

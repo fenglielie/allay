@@ -201,7 +201,7 @@ private:
 
         // 获取了新的文件句柄，
         // 尝试打开文件
-        m_logfile_ofstream->open(full_file_name, std::ios_base::out | mode);
+        m_logfile_ofstream->open(full_file_name, std::ios_base::out | mode); // NOLINT(hicpp-signed-bitwise)
 
         // 没有打开文件，报错退出
         if (m_logfile_ofstream->fail()) {
@@ -363,7 +363,7 @@ private:
     std::shared_ptr<std::ofstream>
         m_logfile_ofstream;  // 指针可以空但是引用必须初始化并且无法改变
     std::string
-        m_file_name;     // 日志文件名是不含前缀的，并且需要通过文件名合法性检查
+        m_file_name;  // 日志文件名是不含前缀的，并且需要通过文件名合法性检查
     bool m_lock{false};  // 加锁后只可以使用输出，不能用对外接口改变输出方式
     Format m_log_start_format{
         Format::LEVEL_SIGNATURE};  // 普通日志默认使用的开头格式

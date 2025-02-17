@@ -1,7 +1,6 @@
 #ifndef MLOGTOOL_H_
 #define MLOGTOOL_H_
 
-
 #include <chrono>
 #include <iostream>
 #include <mutex>  // IWYU pragma: keep
@@ -115,7 +114,7 @@ public:
 
         char buffer[32]{};
 
-        struct tm timeinfo{};
+        struct tm timeinfo {};
 
 #if defined(_MSC_VER)
         localtime_s(&timeinfo, &now_time_t);
@@ -166,7 +165,7 @@ public:
 
         char buffer[32]{};
 
-        struct tm timeinfo{};
+        struct tm timeinfo {};
 
 #if defined(_MSC_VER)
         localtime_s(&timeinfo, &now_time_t);

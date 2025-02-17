@@ -57,8 +57,8 @@ inline auto gausslobatto(unsigned int n)
 
 // Gauss-Lobatto nodes and weights (compile time version)
 template <unsigned int N>
-consteval auto gausslobatto()
-    -> std::pair<std::array<double, N>, std::array<double, N>> {
+consteval auto
+gausslobatto() -> std::pair<std::array<double, N>, std::array<double, N>> {
     static_assert(N >= 2, "N must be >= 2");
     constexpr double pi = std::numbers::pi;
 

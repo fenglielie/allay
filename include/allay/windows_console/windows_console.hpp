@@ -81,7 +81,7 @@ public:
         if (wide_buffer.empty()) { return std::nullopt; }
 
         int utf8_buf_size = static_cast<int>(wide_buffer.size()) * 4;
-        std::string utf8_buffer(utf8_buf_size, '\0');
+        std::string utf8_buffer(static_cast<size_t>(utf8_buf_size), '\0');
         BOOL use_default_char = 0;
         int len = WideCharToMultiByte(CP_UTF8, 0, wide_buffer.data(),
                                       static_cast<int>(wide_buffer.size()),
@@ -91,12 +91,13 @@ public:
             return std::nullopt;  // Conversion failed
         }
 
-        if (len < 2 || utf8_buffer[len - 2] != '\r'
-            || utf8_buffer[len - 1] != '\n') {
+        if (len < 2 || utf8_buffer[static_cast<size_t>(len - 2)] != '\r'
+            || utf8_buffer[static_cast<size_t>(len - 1)] != '\n') {
             return std::nullopt;  // Invalid, missing CRLF at the end
         }
 
-        return utf8_buffer.substr(0, len - 2);  // Remove CRLF
+        return utf8_buffer.substr(0,
+                                  static_cast<size_t>(len - 2));  // Remove CRLF
 #else
         std::string input;
         if (!std::getline(std::cin, input)) { return std::nullopt; }

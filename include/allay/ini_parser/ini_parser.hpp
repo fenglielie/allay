@@ -19,8 +19,8 @@ public:
         m_data[""][key] = value;  // default section
     }
 
-    auto get(const std::string &section, const std::string &key) const
-        -> std::optional<std::string> {
+    auto get(const std::string &section,
+             const std::string &key) const -> std::optional<std::string> {
         auto iter = m_data.find(section);
         if (iter != m_data.end()) {
             auto itKey = iter->second.find(key);
