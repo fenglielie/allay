@@ -28,6 +28,7 @@ set(ALLAY_TARGETS
     progressbar
     pbar
     windows_console
+    colorful
 )
 
 foreach(target ${ALLAY_TARGETS})

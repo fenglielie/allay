@@ -1,0 +1,2 @@
+add_executable(colorful_demo colorful_demo.cpp)
+target_link_libraries(colorful_demo PRIVATE colorful)
