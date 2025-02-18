@@ -25,7 +25,7 @@ set(ALLAY_TARGETS
     mtracer
     mparser
     ini_parser
-    progressbar
+    pbar
     windows_console
     colorful
 )

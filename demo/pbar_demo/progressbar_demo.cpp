@@ -1,4 +1,4 @@
-#include "allay/progressbar/pbar.hpp"
+#include "allay/pbar/pbar.hpp"
 
 #include <thread>
 

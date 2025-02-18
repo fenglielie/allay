@@ -16,7 +16,7 @@ Allay is a collection of small C++ tools for practice, provided as header-only l
 8. **mtracer**: A simple function call stack tracing component (using C++20's `std::source_location` instead of traditional `__FILE__` and others).
 9. **mparser**: A simple command-line parser.
 10. **ini_parser**: A simple INI file parser.
-11. **progressbar**: A simple command-line progress bar display.
+11. **pbar**: A simple command-line progress bar display.
 12. **gaussquad**: A Cpp implementation of [gaussquad](https://github.com/fenglielie/gaussquad) (MATLAB).
 13. **windows_console**: A Windows-specific utility for handling console input/output with UTF-8 encoding and virtual terminal sequences. ([reference 1](https://chariri.moe/archives/408/windows-cin-read-utf8/), [reference 2](https://stackoverflow.com/questions/48176431/reading-utf-8-characters-from-console))
 14. **colorful**: A C++ library for adding color to console output.

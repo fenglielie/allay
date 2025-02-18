@@ -11,10 +11,10 @@ set(TEST_FORMAT_CODE
 check_cxx_source_compiles("${TEST_FORMAT_CODE}" FORMAT_SUPPORTED)
 
 if(FORMAT_SUPPORTED)
-    add_executable(progressbar_demo progressbar_demo.cpp)
-    target_link_libraries(progressbar_demo PRIVATE progressbar)
+    add_executable(pbar_demo pbar_demo.cpp)
+    target_link_libraries(pbar_demo PRIVATE pbar)
 
-    add_test(NAME progressbar_demo COMMAND progressbar_demo)
+    add_test(NAME pbar_demo COMMAND pbar_demo)
 else()
-    message(STATUS "The compiler does not support C++20 <format>, skipping target 'progressbar_demo'.")
+    message(STATUS "The compiler does not support C++20 <format>, skipping target 'pbar_demo'.")
 endif()

@@ -58,8 +58,8 @@ target_include_directories(ini_parser INTERFACE
     $<INSTALL_INTERFACE:include>
 )
 
-add_library(progressbar INTERFACE)
-target_include_directories(progressbar INTERFACE
+add_library(pbar INTERFACE)
+target_include_directories(pbar INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
     $<INSTALL_INTERFACE:include>
 )
