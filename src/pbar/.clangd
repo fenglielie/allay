@@ -1,7 +1,0 @@
-CompileFlags:
-  Remove: [-std=*]
-  Add: [-xc, -Wall]
-  Compiler: clang
-Diagnostics:
-  ClangTidy:
-    Remove: readability-identifier-naming

@@ -114,8 +114,6 @@ public:
 
         return std::format("\033[38;2;{};{};{}m{}\033[0m", r, g, b, msg);
     }
-
-
 };
 
 class LongFormatter : public Formatter {
@@ -371,6 +369,12 @@ public:
     Pbar &set_desc(const std::string &desc) {
         m_desc = desc;
         return *this;
+    }
+
+    double get_time_cost() const {
+        if (m_ptr_formatter == nullptr) { return 0; }
+
+        return m_ptr_updater->get_time_cost();
     }
 
 private:

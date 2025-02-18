@@ -17,10 +17,9 @@ Allay is a collection of small C++ tools for practice, provided as header-only l
 9. **mparser**: A simple command-line parser.
 10. **ini_parser**: A simple INI file parser.
 11. **progressbar**: A simple command-line progress bar display.
-12. **pbar**：c version of progressbar.
-13. **gaussquad**: A Cpp implementation of [gaussquad](https://github.com/fenglielie/gaussquad) (MATLAB).
-14. **windows_console**: A Windows-specific utility for handling console input/output with UTF-8 encoding and virtual terminal sequences. ([reference 1](https://chariri.moe/archives/408/windows-cin-read-utf8/), [reference 2](https://stackoverflow.com/questions/48176431/reading-utf-8-characters-from-console))
-15. **colorful**: A C++ library for adding color to console output.
+12. **gaussquad**: A Cpp implementation of [gaussquad](https://github.com/fenglielie/gaussquad) (MATLAB).
+13. **windows_console**: A Windows-specific utility for handling console input/output with UTF-8 encoding and virtual terminal sequences. ([reference 1](https://chariri.moe/archives/408/windows-cin-read-utf8/), [reference 2](https://stackoverflow.com/questions/48176431/reading-utf-8-characters-from-console))
+14. **colorful**: A C++ library for adding color to console output.
 
 ---
 
