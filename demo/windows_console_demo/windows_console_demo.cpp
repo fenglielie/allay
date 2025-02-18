@@ -4,6 +4,8 @@
 #include <string>
 
 int main() {
+    WindowsConsole::init();
+
     std::cout << "test utf8 output:\n";
     std::string str1 = "テスト Россия";
     std::cout << "测试 ｱｲｳｴｵ 😅🤣" << " | " << str1 << '\n';
