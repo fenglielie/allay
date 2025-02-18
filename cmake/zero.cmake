@@ -158,7 +158,7 @@ macro(zero_check_update)
             message(STATUS ">> Download failed. Status: ${DOWNLOAD_STATUS}")
             message(STATUS ">> Don't worry. This does not affect the usage.")
 
-            set(ZERO_CMAKE_REMOTE_HASH "DOWNLOAD_FAILED" CACHE STRING "Cached hash of the remote zero.cmake. (set by zero.cmake)")
+            set(ZERO_CMAKE_REMOTE_HASH "DOWNLOAD_FAILED" CACHE STRING "Cached hash of the remote zero.cmake. (set by zero.cmake)" FORCE)
             return()
         endif()
 
