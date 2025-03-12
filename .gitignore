@@ -2,7 +2,6 @@
 bin/
 build/
 lib/
-data/*.csv
 
 .mlog/
 tmp*
