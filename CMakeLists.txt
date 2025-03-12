@@ -7,19 +7,8 @@ zero_info()
 
 zero_add_subdirs_rec(src)
 
-include(CheckCXXSourceCompiles)
-
-set(TEST_FORMAT_CODE
-    "#include <format>\n"
-    "int main() {\n"
-    "    std::format(\"Hello, {}!\", \"world\");\n"
-    "    return 0;\n"
-    "}\n"
-)
-
-check_cxx_source_compiles("${TEST_FORMAT_CODE}" FORMAT_SUPPORTED)
-
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+    include(cmake/check_format.cmake)
     include(CTest)
     zero_add_subdirs_rec(demo)
     zero_add_subdirs_rec(test)
