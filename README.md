@@ -6,21 +6,21 @@
 
 Allay is a collection of small C++ tools for practice, provided as header-only libraries unless otherwise specified.
 
-1. **mtest**: A header-only testing framework mimicking gtest.
-2. **safe_input**: A component ensuring safe input handling.
-3. **msignal**: An observer pattern implementation for signal transmission.
-4. **mlog**:  A simple logging library.
-5. **data_handler**: A component for reading and writing data files.
-6. **var_type_dict**: A heterogeneous dictionary based on template metaprogramming (reference: 《C++模板元编程实战：一个深度学习框架的初步实现》).
-7. **simple_thread_pool**: A simple C++ thread pool （[reference](https://www.limerence2017.com/2023/09/17/concpp07/)）.
-8. **mtracer**: A simple function call stack tracing component (using C++20's `std::source_location` instead of traditional `__FILE__` and others).
-9. **mparser**: A simple command-line parser.
-10. **ini_parser**: A simple INI file parser.
-11. **pbar**: A simple command-line progress bar display.
-12. **gaussquad**: A Cpp implementation of [gaussquad](https://github.com/fenglielie/gaussquad) (MATLAB).
-13. **windows_console**: A Windows-specific utility for handling console input/output with UTF-8 encoding and virtual terminal sequences. ([reference 1](https://chariri.moe/archives/408/windows-cin-read-utf8/), [reference 2](https://stackoverflow.com/questions/48176431/reading-utf-8-characters-from-console))
-14. **colorful**: A C++ library for adding color to console output.
-15. **mtimer**: A simple timer component.
+- **mtest**: A header-only testing framework mimicking gtest.
+- **safe_input**: A component ensuring safe input handling.
+- **msignal**: An observer pattern implementation for signal transmission.
+- **mlog**:  A simple logging library.
+- **data_handler**: A component for reading and writing data files.
+- **var_type_dict**: A heterogeneous dictionary based on template metaprogramming (reference: 《C++模板元编程实战：一个深度学习框架的初步实现》).
+- **simple_thread_pool**: A simple C++ thread pool （[reference](https://www.limerence2017.com/2023/09/17/concpp07/)）.
+- **mtracer**: A simple function call stack tracing component (using C++20's `std::source_location` instead of traditional `__FILE__` and others).
+- **mparser**: A simple command-line parser.
+- **ini_parser**: A simple INI file parser.
+- **pbar**: A simple command-line progress bar display.
+- **gaussquad**: A Cpp implementation of [gaussquad](https://github.com/fenglielie/gaussquad) (MATLAB).
+- **windows_console**: A Windows-specific utility for handling console input/output with UTF-8 encoding and virtual terminal sequences. ([reference 1](https://chariri.moe/archives/408/windows-cin-read-utf8/), [reference 2](https://stackoverflow.com/questions/48176431/reading-utf-8-characters-from-console))
+- **colorful**: A C++ library for adding color to console output.
+- **mtimer**: A simple timer component.
 
 ---
 
