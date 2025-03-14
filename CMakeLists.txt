@@ -8,10 +8,20 @@ zero_info()
 zero_add_subdirs_rec(src)
 
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
-    include(cmake/check_format.cmake)
     include(CTest)
-    zero_add_subdirs_rec(demo)
-    zero_add_subdirs_rec(test)
+    if(BUILD_TESTING)
+        include(CheckCXXSourceCompiles)
+
+        check_cxx_source_compiles("#include <format>
+int main() {
+    std::format(\"Hello, {}!\", \"world\");
+    return 0;
+}\n"
+            FORMAT_SUPPORTED)
+
+        zero_add_subdirs_rec(demo)
+        zero_add_subdirs_rec(test)
+    endif()
 endif()
 
 set(ALLAY_TARGETS
@@ -37,9 +47,9 @@ endforeach()
 
 install(TARGETS ${ALLAY_TARGETS} EXPORT allayTargets)
 install(EXPORT allayTargets
-        FILE allayConfig.cmake
-        NAMESPACE allay::
-        DESTINATION lib/cmake/allay)
+    FILE allayConfig.cmake
+    NAMESPACE allay::
+    DESTINATION lib/cmake/allay)
 install(DIRECTORY include/allay DESTINATION include)
 
 zero_check_update()
