@@ -64,12 +64,6 @@ target_include_directories(pbar INTERFACE
     $<INSTALL_INTERFACE:include>
 )
 
-add_library(gaussquad INTERFACE)
-target_include_directories(gaussquad INTERFACE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
-    $<INSTALL_INTERFACE:include>
-)
-
 add_library(windows_console INTERFACE)
 target_include_directories(windows_console INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>

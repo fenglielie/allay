@@ -1,5 +1,0 @@
-add_executable(gaussquad_demo gaussquad_demo.cpp)
-target_link_libraries(gaussquad_demo PRIVATE gaussquad)
-
-add_executable(gaussquad3_demo gaussquad3_demo.cpp)
-target_link_libraries(gaussquad3_demo PRIVATE gaussquad)

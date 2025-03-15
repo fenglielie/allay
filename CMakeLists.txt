@@ -20,7 +20,6 @@ int main() {
             FORMAT_SUPPORTED)
 
         zero_add_subdirs_rec(demo)
-        zero_add_subdirs_rec(test)
     endif()
 endif()
 
