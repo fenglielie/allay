@@ -1,9 +1,9 @@
 # zero.cmake
 # fenglielie@qq.com
-# 2025-02-17
-# version 1.2
+# 2025-03-15
+# version 1.3
 
-set(ZERO_CMAKE_VERSION "1.2" CACHE STRING "Version of zero.cmake. (set by zero.cmake)" FORCE)
+set(ZERO_CMAKE_VERSION "1.3" CACHE STRING "Version of zero.cmake. (set by zero.cmake)" FORCE)
 set(ZERO_CMAKE_FILE "${CMAKE_CURRENT_LIST_FILE}" CACHE PATH "Path to zero.cmake. (set by zero.cmake)" FORCE)
 
 ## marcos
@@ -183,13 +183,13 @@ endmacro()
 function(zero_get_files rst _sources)
     set(tmp_rst "")
 
-    foreach(item ${_sources})
+    foreach(item IN LISTS _sources)
         if(IS_DIRECTORY ${item}) # item is dir
             file(GLOB itemSrcs CONFIGURE_DEPENDS
                 ${item}/*.c ${item}/*.C ${item}/*.cc ${item}/*.cpp ${item}/*.cxx
                 ${item}/*.h ${item}/*.hpp
             )
-            foreach(src ${itemSrcs})
+            foreach(src IN LISTS itemSrcs)
                 # Convert to absolute and normalize
                 cmake_path(ABSOLUTE_PATH src NORMALIZE OUTPUT_VARIABLE src)
                 list(APPEND tmp_rst ${src})
@@ -207,13 +207,13 @@ endfunction()
 function(zero_get_files_rec rst _sources)
     set(tmp_rst "")
 
-    foreach(item ${_sources})
+    foreach(item IN LISTS _sources)
         if(IS_DIRECTORY ${item}) # item is dir
             file(GLOB_RECURSE itemSrcs CONFIGURE_DEPENDS
                 ${item}/*.c ${item}/*.C ${item}/*.cc ${item}/*.cpp ${item}/*.cxx
                 ${item}/*.h ${item}/*.hpp
             )
-            foreach(src ${itemSrcs})
+            foreach(src IN LISTS itemSrcs)
                 # Convert to absolute and normalize
                 cmake_path(ABSOLUTE_PATH src NORMALIZE OUTPUT_VARIABLE src)
                 list(APPEND tmp_rst ${src})
@@ -234,21 +234,29 @@ function(zero_add_subdirs _path)
     # Get absolute path of the target directory and normalize it
     cmake_path(ABSOLUTE_PATH _path BASE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} NORMALIZE OUTPUT_VARIABLE _path)
 
+    if((NOT EXISTS "${_path}") OR (NOT IS_DIRECTORY "${_path}"))
+        message(FATAL_ERROR "Invalid path: '${_path}' is not a valid directory.")
+    endif()
+
     # Search all subdirectories
     file(GLOB children LIST_DIRECTORIES ON CONFIGURE_DEPENDS ${_path}/*)
     set(dirs "")
-    list(PREPEND children "${_path}") # Add root directory first
+
+    # Add _path if it is not the current directory
+    if(NOT "${_path}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
+        list(PREPEND children "${_path}")
+    endif()
 
     # Append to dirs if it contains CMakeLists.txt
-    foreach(item ${children})
+    foreach(item IN LISTS children)
         if((IS_DIRECTORY ${item}) AND (EXISTS "${item}/CMakeLists.txt"))
             cmake_path(ABSOLUTE_PATH item NORMALIZE OUTPUT_VARIABLE item)
-            list(APPEND dirs ${item})
+            list(APPEND dirs "${item}")
         endif()
     endforeach()
 
-    foreach(dir ${dirs})
-        message(STATUS ">> Go to ${dir}")
+    foreach(dir IN LISTS dirs)
+        message(STATUS ">> Adding subdirectory: ${dir}")
         add_subdirectory(${dir})
     endforeach()
 endfunction()
@@ -259,37 +267,41 @@ function(zero_add_subdirs_rec _path)
     # Get absolute path of the target directory and normalize it
     cmake_path(ABSOLUTE_PATH _path BASE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} NORMALIZE OUTPUT_VARIABLE _path)
 
+    if((NOT EXISTS "${_path}") OR (NOT IS_DIRECTORY "${_path}"))
+        message(FATAL_ERROR "Invalid path: '${_path}' is not a valid directory.")
+    endif()
+
     # Search all subdirectories
     file(GLOB_RECURSE children LIST_DIRECTORIES ON CONFIGURE_DEPENDS ${_path}/*)
     set(dirs "")
-    list(PREPEND children "${_path}") # Add root directory first
+
+    # Add _path if it is not the current directory
+    if(NOT "${_path}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
+        list(PREPEND children "${_path}")
+    endif()
 
     # Append to dirs if it contains CMakeLists.txt
-    foreach(item ${children})
+    foreach(item IN LISTS children)
         if((IS_DIRECTORY ${item}) AND (EXISTS "${item}/CMakeLists.txt"))
             cmake_path(ABSOLUTE_PATH item NORMALIZE OUTPUT_VARIABLE item)
-            list(APPEND dirs ${item})
+            list(APPEND dirs "${item}")
         endif()
     endforeach()
 
-    foreach(dir ${dirs})
-        message(STATUS ">> Go to ${dir}")
+    foreach(dir IN LISTS dirs)
+        message(STATUS ">> Adding subdirectory (rec): ${dir}")
         add_subdirectory(${dir})
     endforeach()
 endfunction()
 
 ## target functions
 
-function(zero_inside_check_target _target)
+function(zero_target_preset_definitions _target)
     if(NOT TARGET "${_target}")
         message(FATAL_ERROR "${_target} is not a target")
     endif()
-endfunction()
 
-function(zero_target_preset_definitions _target)
-    zero_inside_check_target(${_target})
-
-    target_compile_definitions(${_target} PRIVATE
+    target_compile_definitions("${_target}" PRIVATE
         "ZERO_TARGET_NAME=\"${_target}\""
         "ZERO_PROJECT_SOURCE_DIR=\"${PROJECT_SOURCE_DIR}\""
         "ZERO_CURRENT_SOURCE_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}\""
@@ -308,17 +320,17 @@ function(zero_inside_list_print)
 
     # return if STRS is empty
     list(LENGTH ARG_STRS strsLength)
-    if(NOT strsLength)
+    if(NOT "${strsLength}")
         return()
     endif()
 
     # print title
-    if(NOT (${ARG_TITLE} STREQUAL ""))
-        message(STATUS ${ARG_TITLE})
+    if(NOT ("${ARG_TITLE}" STREQUAL ""))
+        message(STATUS "${ARG_TITLE}")
     endif()
 
     # print prefix+item in STRS
-    foreach(str ${ARG_STRS})
+    foreach(str IN LISTS ARG_STRS)
         message(STATUS "${ARG_PREFIX}${str}")
     endforeach()
 
@@ -326,23 +338,24 @@ endfunction()
 
 function(zero_inside_print_property _target _porperty)
     string(TOUPPER "${_porperty}" _porperty)
+    string(TOLOWER "${_porperty}" _porperty_lower)
 
     get_target_property(tmp ${_target} ${_porperty})
     if(NOT (tmp STREQUAL "tmp-NOTFOUND"))
-        string(TOLOWER "${_porperty}" porperty_lower)
-        zero_inside_list_print(STRS "${tmp}" TITLE "${porperty_lower}:" PREFIX "  * ")
+        zero_inside_list_print(STRS "${tmp}" TITLE "${_porperty_lower}:" PREFIX "  * ")
     endif()
 
     get_target_property(tmp ${_target} INTERFACE_${_porperty})
     if(NOT (tmp STREQUAL "tmp-NOTFOUND"))
-        string(TOLOWER "${_porperty}" porperty_lower)
-        zero_inside_list_print(STRS "${tmp}" TITLE "interface_${porperty_lower}:" PREFIX "  * ")
+        zero_inside_list_print(STRS "${tmp}" TITLE "${_porperty_lower}: (interface)" PREFIX "  + ")
     endif()
 
 endfunction()
 
 function(zero_target_info _target)
-    zero_inside_check_target(${_target})
+    if(NOT TARGET "${_target}")
+        message(FATAL_ERROR "${_target} is not a target")
+    endif()
 
     message(STATUS "---------- <Check Target Begin> ----------")
     message(STATUS "name: ${_target}")
@@ -354,13 +367,13 @@ function(zero_target_info _target)
     get_target_property(tmp ${_target} SOURCE_DIR)
     message(STATUS "location: ${tmp}")
 
-    zero_inside_print_property(${_target} SOURCES)
-    zero_inside_print_property(${_target} INCLUDE_DIRECTORIES)
-    zero_inside_print_property(${_target} LINK_DIRECTORIES)
-    zero_inside_print_property(${_target} LINK_LIBRARIES)
-    zero_inside_print_property(${_target} LINK_OPTIONS)
-    zero_inside_print_property(${_target} COMPILE_OPTIONS)
-    zero_inside_print_property(${_target} COMPILE_DEFINITIONS)
+    zero_inside_print_property("${_target}" SOURCES)
+    zero_inside_print_property("${_target}" INCLUDE_DIRECTORIES)
+    zero_inside_print_property("${_target}" LINK_DIRECTORIES)
+    zero_inside_print_property("${_target}" LINK_LIBRARIES)
+    zero_inside_print_property("${_target}" LINK_OPTIONS)
+    zero_inside_print_property("${_target}" COMPILE_OPTIONS)
+    zero_inside_print_property("${_target}" COMPILE_DEFINITIONS)
 
     message(STATUS "------------------------------------------")
 endfunction()
