@@ -25,7 +25,6 @@ endif()
 
 set(ALLAY_TARGETS
     mtest
-    mtest_main
     safe_input
     msignal
     mlog

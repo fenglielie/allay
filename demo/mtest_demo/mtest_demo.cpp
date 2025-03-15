@@ -14,3 +14,5 @@ TEST(IsTrue, 1) { EXPECT_TRUE(2 < 3); }
 TEST(isTrue, 2) { EXPECT_FALSE(2 > 4); }
 
 }  // namespace
+
+MTEST_MAIN
