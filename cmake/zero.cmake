@@ -233,6 +233,7 @@ endfunction()
 function(zero_add_subdirs _path)
     # Get absolute path of the target directory and normalize it
     cmake_path(ABSOLUTE_PATH _path BASE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} NORMALIZE OUTPUT_VARIABLE _path)
+    string(REGEX REPLACE "/+$" "" _path "${_path}") # a/b/ -> a/b
 
     if((NOT EXISTS "${_path}") OR (NOT IS_DIRECTORY "${_path}"))
         message(FATAL_ERROR "Invalid path: '${_path}' is not a valid directory.")
@@ -266,6 +267,7 @@ endfunction()
 function(zero_add_subdirs_rec _path)
     # Get absolute path of the target directory and normalize it
     cmake_path(ABSOLUTE_PATH _path BASE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} NORMALIZE OUTPUT_VARIABLE _path)
+    string(REGEX REPLACE "/+$" "" _path "${_path}") # a/b/ -> a/b
 
     if((NOT EXISTS "${_path}") OR (NOT IS_DIRECTORY "${_path}"))
         message(FATAL_ERROR "Invalid path: '${_path}' is not a valid directory.")
