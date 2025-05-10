@@ -2,10 +2,14 @@ cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 project(allay VERSION 0.1)
 include(cmake/zero.cmake)
 
-zero_init_quiet()
-zero_info()
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-zero_add_subdirs_rec(src)
+zero_setup()
+zero_check()
+
+zero_add_subdirs(src RECURSE)
 
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     include(CTest)
@@ -19,7 +23,7 @@ int main() {
 }\n"
             FORMAT_SUPPORTED)
 
-        zero_add_subdirs_rec(demo)
+        zero_add_subdirs(demo RECURSE)
     endif()
 endif()
 
@@ -49,5 +53,3 @@ install(EXPORT allayTargets
     NAMESPACE allay::
     DESTINATION lib/cmake/allay)
 install(DIRECTORY include/allay DESTINATION include)
-
-zero_check_update()

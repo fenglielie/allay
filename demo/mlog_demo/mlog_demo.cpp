@@ -43,7 +43,7 @@ void test2() {
 }  // namespace
 
 int main(int argc, char *argv[]) {
-    mlog::init(ZERO_CURRENT_SOURCE_DIR + std::string("/.mlog/"));
+    mlog::init(PREFIX + std::string("/.mlog/"));
     mlog::set_level_info();
 
     prepare();

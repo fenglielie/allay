@@ -5,7 +5,7 @@
 int main() {
     IniParser ini;
     try {
-        ini.read(ZERO_CURRENT_SOURCE_DIR + std::string("/config.ini"));
+        ini.read(PREFIX + std::string("/config.ini"));
         std::cout << "n: " << ini.get("n").value_or("[x]") << '\n';
         std::cout << "pi: " << ini.get("pi").value_or("[x]") << '\n';
         std::cout << "msg: " << ini.get("msg").value_or("[x]") << '\n';
@@ -28,7 +28,7 @@ int main() {
         }
 
         ini.set("new_section", "new_key", "new_value");
-        ini.write(ZERO_CURRENT_SOURCE_DIR + std::string("/tmp_config.ini"),
+        ini.write(PREFIX + std::string("/tmp_config.ini"),
                   std::ios::trunc);
     }
     catch (const std::exception &e) {
