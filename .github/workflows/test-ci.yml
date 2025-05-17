@@ -1,0 +1,26 @@
+name: Test-CI
+
+on:
+  push:
+    branches:
+      - 'main'
+    paths-ignore:
+      - 'doc/**'
+      - 'docs/**'
+      - '**.md'
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  run-bvt-gcc13:
+    uses: fenglielie/cmakezero/.github/workflows/bvt-gcc13.yml@main
+    name: run bvt with g++ 13
+
+  run-bvt-clang15:
+    uses: fenglielie/cmakezero/.github/workflows/bvt-clang18.yml@main
+    name: run bvt with clang 18
+
+  run-bvt-msvc14:
+    uses: fenglielie/cmakezero/.github/workflows/bvt-msvc14.yml@main
+    name: run bvt with msvc14 (vs2022)

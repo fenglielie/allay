@@ -1,0 +1,4 @@
+add_executable(var_type_dict_demo var_type_dict_demo.cpp)
+target_link_libraries(var_type_dict_demo PRIVATE var_type_dict)
+
+add_test(NAME var_type_dict_demo COMMAND var_type_dict_demo)
