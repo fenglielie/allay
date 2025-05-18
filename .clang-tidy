@@ -1,0 +1,82 @@
+Checks: 'bugprone-*,
+-bugprone-easily-swappable-parameters,
+cert-*,
+-cert-env33-c,
+-cert-dcl50-cpp,
+-cert-err33-c,
+clang-analyzer-*,
+cppcoreguidelines-*,
+-cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+-cppcoreguidelines-pro-bounds-pointer-arithmetic,
+-cppcoreguidelines-pro-type-vararg,
+-cppcoreguidelines-avoid-non-const-global-variables,
+-cppcoreguidelines-avoid-const-or-ref-data-members,
+-cppcoreguidelines-macro-usage,
+-cppcoreguidelines-pro-type-cstyle-cast,
+-cppcoreguidelines-owning-memory,
+google-*,
+-google-objc-*,
+-google-readability-todo,
+-google-readability-casting,
+hicpp-*,
+-hicpp-vararg,
+llvm-*,
+misc-*,
+-misc-non-private-member-variables-in-classes,
+-misc-unused-parameters,
+-cppcoreguidelines-non-private-member-variables-in-classes,
+modernize-*,
+-modernize-loop-convert,
+-modernize-use-nodiscard,
+-modernize-use-trailing-return-type,
+-modernize-avoid-c-arrays,
+-cppcoreguidelines-avoid-c-arrays,
+-hicpp-avoid-c-arrays,
+mpi-*,
+performance-*,
+-performance-unnecessary-value-param,
+-performance-enum-size,
+readability-*,
+readability-identifier-naming,
+-readability-braces-around-statements,
+-hicpp-braces-around-statements,
+-google-readability-braces-around-statements,
+-readability-identifier-length,
+-readability-redundant-control-flow,
+-readability-magic-numbers,
+-cppcoreguidelines-avoid-magic-numbers,
+-readability-const-return-type,
+-readability-math-missing-parentheses,
+fuchsia-default-arguments-declarations,
+-misc-use-internal-linkage,
+'
+
+CheckOptions:
+  - {key: readability-identifier-naming.MacroDefinitionCase, value: UPPER_CASE}
+  - {key: readability-identifier-naming.NamespaceCase, value: lower_case}
+  - {key: readability-identifier-naming.ClassCase, value: CamelCase}
+  - {key: readability-identifier-naming.StructCase, value: CamelCase}
+  - {key: readability-identifier-naming.EnumCase, value: CamelCase}
+  - {key: readability-identifier-naming.TypedefCase, value: CamelCase}
+  - {key: readability-identifier-naming.TypeAliasCase, value: CamelCase}
+  - {key: readability-identifier-naming.TemplateParameterCase, value: CamelCase}
+  - {key: readability-identifier-naming.ValueTemplateParameterCase, value: CamelCase}
+  - {key: readability-identifier-naming.ParameterCase, value: aNy_CasE}
+  - {key: readability-identifier-naming.MethodCase, value: lower_case}
+  - {key: readability-identifier-naming.PublicMethodCase, value: aNy_CasE}
+  - {key: readability-identifier-naming.MemberCase, value: lower_case}
+  - {key: readability-identifier-naming.PublicMemberCase, value: aNy_CasE}
+  - {key: readability-identifier-naming.PrivateMemberPrefix, value: m_}
+  - {key: readability-identifier-naming.FunctionCase, value: aNy_CasE}
+  - {key: readability-identifier-naming.VariableCase, value: aNy_CasE}
+  - {key: readability-identifier-naming.ConstexprVariableCase, value: aNy_CasE}
+  - {key: cppcoreguidelines-special-member-functions.AllowSoleDefaultDtor, value: true}
+  - {key: cppcoreguidelines-special-member-functions.AllowMissingMoveFunctions, value: true}
+  - {key: cppcoreguidelines-special-member-functions.AllowMissingMoveFunctionsWhenCopyIsDeleted, value: true}
+  - {key: hicpp-special-member-functions.AllowSoleDefaultDtor, value: true}
+  - {key: hicpp-special-member-functions.AllowMissingMoveFunctions, value: true}
+  - {key: hicpp-special-member-functions.AllowMissingMoveFunctionsWhenCopyIsDeleted, value: true}
+  - {key: readability-function-cognitive-complexity.IgnoreMacros, value: true}
+  - {key: readability-function-cognitive-complexity.Threshold, value: 40}
+  - {key: cppcoreguidelines-avoid-do-while.IgnoreMacros, value: true}
+  - {key: hicpp-signed-bitwise.IgnorePositiveIntegerLiterals, value: true}

@@ -1,0 +1,35 @@
+---
+Language: Cpp
+BasedOnStyle: LLVM
+AccessModifierOffset: -4
+AllowShortBlocksOnASingleLine:  Always
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortIfStatementsOnASingleLine: WithoutElse
+AllowShortLoopsOnASingleLine: true
+AlwaysBreakTemplateDeclarations: true
+
+BreakBeforeBinaryOperators: NonAssignment
+BreakBeforeBraces: Custom
+BraceWrapping:
+    AfterClass: false
+    AfterControlStatement: Never
+    AfterEnum: false
+    AfterFunction: false
+    AfterNamespace: false
+    AfterStruct: false
+    AfterUnion: false
+    AfterExternBlock: false
+    BeforeCatch: true
+    BeforeElse: true
+    IndentBraces: false
+    SplitEmptyFunction: false
+    SplitEmptyRecord: false
+    SplitEmptyNamespace: true
+
+KeepEmptyLinesAtTheStartOfBlocks: false
+SeparateDefinitionBlocks: Always
+SpacesBeforeTrailingComments: 2
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+---
