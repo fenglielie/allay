@@ -41,6 +41,7 @@ set(ALLAY_TARGETS
     pbar
     windows_console
     colorful
+    mtimer
 )
 
 foreach(target ${ALLAY_TARGETS})
