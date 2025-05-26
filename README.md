@@ -1,9 +1,5 @@
 # Allay
 
-<p style="text-align: center;">
-  <img src="https://raw.githubusercontent.com/fenglielie/fenglielie.image/main/img/allay_fly.gif" style="width: 50%" title="Allay"/>
-</p>
-
 Allay is a collection of small C++ tools for practice, provided as header-only libraries unless otherwise specified.
 
 - **mtest**: A header-only testing framework in the style of gtest.
