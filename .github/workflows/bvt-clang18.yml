@@ -1,0 +1,38 @@
+name: bvt-clang18
+
+on:
+  workflow_call:
+    inputs:
+      branch:
+        type: string
+        required: false
+
+jobs:
+  bvt-clang18:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ inputs.branch }}
+
+    - name: install clang 18
+      run: |
+        wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+        sudo apt-add-repository "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-18 main" -y
+        sudo apt update
+        sudo apt install -y clang-18
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/clang-18 18
+        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/clang++-18 18
+
+    - name: check compiler version
+      run: g++ --version
+
+    - name: build with cmake
+      run: |
+        cmake . -B build
+        cmake --build ./build -j8
+
+    - name: run tests
+      run: |
+        cd ./build
+        ctest -j8
