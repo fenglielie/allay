@@ -3,7 +3,7 @@
 
 #ifndef UNUSE_MTEST
 
-// EXCEPT
+// EXPECT
 #define MTEST_EXPECT(x, y, cond)                                               \
     if (!((x)cond(y))) {                                                       \
         MTest::MTestMessage::expect_result() = false;                          \
@@ -27,7 +27,7 @@
     else { MTest::MTestMessage::expect_result() = true; }                      \
     MTest::msg_when_fail_even_brief()
 
-// EXCEPT_XX
+// EXPECT_XX
 #define EXPECT_EQ(x, y) MTEST_EXPECT(x, y, ==)
 #define EXPECT_NE(x, y) MTEST_EXPECT(x, y, !=)
 #define EXPECT_LT(x, y) MTEST_EXPECT(x, y, <)
@@ -36,7 +36,7 @@
 #define EXPECT_GE(x, y) MTEST_EXPECT(x, y, >=)
 
 // EXPECT double almost equal
-#define EXPECT_AE(x, y, precision)                                             \
+#define EXPECT_NEAR(x, y, precision)                                           \
     if (std::abs((x) - (y)) > (precision)) {                                   \
         MTest::MTestMessage::expect_result() = false;                          \
         MTest::msg_even_brief()                                                \
@@ -51,7 +51,7 @@
     else { MTest::MTestMessage::expect_result() = true; }                      \
     MTest::msg_when_fail_even_brief()
 
-// EXCEPT bool
+// EXPECT bool
 #define EXPECT_TRUE(x)                                                         \
     if (!((x))) {                                                              \
         MTest::MTestMessage::expect_result() = false;                          \
