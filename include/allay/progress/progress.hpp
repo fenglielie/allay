@@ -252,7 +252,7 @@ private:
     }
 };
 
-class Pbar {
+class Progress {
 public:
     // 数据记录和更新类
     class DataUpdater {
@@ -322,17 +322,17 @@ public:
 
         bool m_rate_setted = false;
 
-        friend class Pbar;
+        friend class Progress;
     };
 
-    Pbar()
-        : Pbar(std::make_shared<Formatter>(), std::make_shared<DataUpdater>()) {
+    Progress()
+        : Progress(std::make_shared<Formatter>(), std::make_shared<DataUpdater>()) {
     }
 
-    explicit Pbar(std::shared_ptr<Formatter> ptr_formatter)
-        : Pbar(ptr_formatter, std::make_shared<DataUpdater>()) {}
+    explicit Progress(std::shared_ptr<Formatter> ptr_formatter)
+        : Progress(ptr_formatter, std::make_shared<DataUpdater>()) {}
 
-    Pbar(std::shared_ptr<Formatter> ptr_formatter,
+    Progress(std::shared_ptr<Formatter> ptr_formatter,
          std::shared_ptr<DataUpdater> ptr_updater)
         : m_ptr_formatter(std::move(ptr_formatter)),
           m_ptr_updater(std::move(ptr_updater)) {}
@@ -356,17 +356,17 @@ public:
 
     static void nextline() { std::cout << std::endl; }
 
-    Pbar &enable_color() {
+    Progress &enable_color() {
         m_color_enabled = true;
         return *this;
     }
 
-    Pbar &disable_color() {
+    Progress &disable_color() {
         m_color_enabled = false;
         return *this;
     }
 
-    Pbar &set_desc(const std::string &desc) {
+    Progress &set_desc(const std::string &desc) {
         m_desc = desc;
         return *this;
     }

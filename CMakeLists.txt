@@ -29,19 +29,12 @@ endif()
 
 set(ALLAY_TARGETS
     mtest
-    safe_input
-    msignal
     mlog
     data_handler
-    var_type_dict
-    simple_thread_pool
-    mtracer
-    mparser
     ini_parser
-    pbar
-    windows_console
-    colorful
-    mtimer
+    cmd_parser
+    progress
+    console
 )
 
 foreach(target ${ALLAY_TARGETS})

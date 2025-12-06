@@ -1,7 +1,7 @@
-#include "allay/mparser/mparser.hpp"
+#include "allay/cmd_parser/cmd_parser.hpp"
 
 int main(int argc, char *argv[]) {
-    auto parser = MParser{};
+    auto parser = CmdParser{};
 
     parser.add_flag({"--gzip", "-g"}, "use gzip");
     parser.add_flag({"-v", "--verbose"}, "");

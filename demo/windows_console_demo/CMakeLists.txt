@@ -1,4 +1,0 @@
-add_executable(windows_console_demo windows_console_demo.cpp)
-target_link_libraries(windows_console_demo PRIVATE windows_console)
-
-# add_test(NAME windows_console_demo COMMAND windows_console_demo)

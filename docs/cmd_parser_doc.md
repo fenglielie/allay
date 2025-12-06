@@ -1,6 +1,6 @@
-# MParser 命令行参数解析组件
+# 命令行参数解析组件
 
-`MParser` 是一个模仿 cmdline 的轻量级的 C++ 命令行参数解析组件，支持解析标志（flags）和选项（options），并能够处理回调函数、类型转换以及剩余参数。
+`CmdParser` 是一个模仿 cmdline 的轻量级的 C++ 命令行参数解析组件，支持解析标志（flags）和选项（options），并能够处理回调函数、类型转换以及剩余参数。
 
 
 ## 特点：
@@ -29,9 +29,9 @@
 
 ## 使用方法
 
-### 创建 `MParser` 实例
+### 创建 `CmdParser` 实例
 ```cpp
-auto parser = MParser{};
+auto parser = CmdParser{};
 ```
 
 

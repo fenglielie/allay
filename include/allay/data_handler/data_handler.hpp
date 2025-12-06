@@ -1,42 +1,11 @@
 #pragma once
 
 #include <algorithm>
-#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <tuple>
 #include <vector>
-
-class FileRAII {
-public:
-    FileRAII(const char *file_name, std::ios::openmode mode)
-        : m_file(file_name, mode) {
-        if (m_file.fail()) {
-            throw std::runtime_error("FileRAII: Failed to open file "
-                                     + std::string(file_name));
-        }
-    }
-
-    FileRAII(const FileRAII &) = delete;
-    FileRAII &operator=(const FileRAII &) = delete;
-
-    FileRAII(FileRAII &&other) noexcept : m_file(std::move(other.m_file)) {}
-
-    FileRAII &operator=(FileRAII &&other) noexcept {
-        m_file = std::move(other.m_file);
-        return *this;
-    }
-
-    ~FileRAII() {
-        if (m_file.is_open()) { m_file.close(); }
-    }
-
-    std::fstream &get_stream() { return m_file; }
-
-private:
-    std::fstream m_file;
-};
 
 template <typename... Ts>
 class DataHandler {

@@ -1,7 +1,0 @@
-add_executable(simple_thread_pool_demo simple_thread_pool_demo.cpp)
-target_link_libraries(simple_thread_pool_demo PRIVATE simple_thread_pool)
-
-find_package(Threads REQUIRED)
-target_link_libraries(simple_thread_pool_demo PRIVATE Threads::Threads)
-
-add_test(NAME simple_thread_pool_demo COMMAND simple_thread_pool_demo)

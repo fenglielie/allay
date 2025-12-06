@@ -3,7 +3,7 @@
 #include <iostream>
 
 int main() {
-    IniParser ini;
+    auto ini = IniParser{};
     try {
         ini.read(PREFIX + std::string("/config.ini"));
         std::cout << "n: " << ini.get("n").value_or("[x]") << '\n';

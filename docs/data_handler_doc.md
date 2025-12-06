@@ -45,7 +45,6 @@ using LineType = std::tuple<int,int,double>;
 - `write`方法需要提供一个输出流（通常是文件输出流），提供`std::vector<LineType>`数据，
 也需要提供行内的分隔符（例如`,`或` `），无返回值。
 
-上述接口都需要一个文件流，这里同时提供了针对文件流的RAII封装`FileRAII`，只需要提供文件名和打开方式，省略了打开和关闭文件的操作，在文件打开失败时会抛出异常。
 
 一些细节的处理：
 
@@ -57,14 +56,15 @@ using LineType = std::tuple<int,int,double>;
 
 
 使用示例：
-读取一个以`,`作为分隔符的数据文件，再把数据重新以` `作为分隔符写入新文件中，只需要两条语句
+读取一个以`,`作为分隔符的数据文件，再把数据重新以` `作为分隔符写入新文件中
 ```cpp
 // 读取 Nodes.txt
-auto nodes = DataHandler<int, double, double>::read(
-    FileRAII(PREFIX "/Nodes.csv", std::ios::in).get_stream(), ',');
+auto fin = std::fstream(PREFIX "/Nodes.csv", std::ios::in);
+auto nodes = DataHandler<int, double, double>::read(fin, ',');
+
 // 写入 tmp_Nodes.csv
-DataHandler<int, double, double>::write(
-    FileRAII(PREFIX "/tmp_Nodes.csv", std::ios::out).get_stream(), nodes,' ');
+auto fout = std::fstream(PREFIX "/tmp_Nodes.csv", std::ios::out);
+DataHandler<int, double, double>::write(fout, nodes, ' ');
 ```
 这里原本的Nodes.csv形如
 ```

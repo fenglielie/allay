@@ -26,7 +26,7 @@
 #include <optional>
 #include <string>
 
-class WindowsConsole {
+class Console {
 public:
     static int init() noexcept {
 #ifdef _WIN32

@@ -14,9 +14,9 @@
 #include <utility>
 #include <vector>
 
-namespace mparser_detail {
+namespace cmd_parser_detail {
 
-// MParser选项支持的类型
+// 选项支持的类型
 template <typename T>
 concept Supported =
     std::disjunction_v<std::is_same<T, std::string>, std::is_same<T, bool>,
@@ -82,9 +82,9 @@ inline bool is_valid_short_name(const std::string &name) {
 
 // 但是长短名称不允许全空
 
-}  // namespace mparser_detail
+}  // namespace cmd_parser_detail
 
-class MParser {
+class CmdParser {
 public:
     class Item {
     public:
@@ -125,15 +125,15 @@ public:
     private:
         void validate() {
             if (!short_name.empty()
-                && !mparser_detail::is_valid_full_name(full_name)) {
+                && !cmd_parser_detail::is_valid_full_name(full_name)) {
                 // 如果存在第二个参数，并且第一个作为全称选项检查失败，可以尝试交换
                 std::swap(full_name, short_name);
             }
 
-            if (!mparser_detail::is_valid_full_name(full_name)) {
+            if (!cmd_parser_detail::is_valid_full_name(full_name)) {
                 throw std::invalid_argument("Invalid full name: " + full_name);
             }
-            if (!mparser_detail::is_valid_short_name(short_name)) {
+            if (!cmd_parser_detail::is_valid_short_name(short_name)) {
                 throw std::invalid_argument("Invalid short name: "
                                             + short_name);
             }
@@ -141,8 +141,8 @@ public:
     };
 
     // 执行回调函数
-    MParser &add_flag(const Item &flag, const std::string &desc,
-                      std::function<void()> caller) {
+    CmdParser &add_flag(const Item &flag, const std::string &desc,
+                        std::function<void()> caller) {
         check_and_update_names(flag);
 
         m_flags.insert({flag, FlagInfo{.caller = caller,
@@ -152,28 +152,28 @@ public:
     }
 
     // 不指定回调函数，只有计数功能
-    MParser &add_flag(const Item &flag, const std::string &desc) {
+    CmdParser &add_flag(const Item &flag, const std::string &desc) {
         return add_flag(flag, desc, []() {});
     }
 
     // 添加选项，提供变量默认值，提供参数检查函数
-    template <mparser_detail::Supported T>
-    MParser &add_option(const Item &option, const std::string &desc,
-                        bool required, T default_value,
-                        std::function<bool(T)> checker) {
+    template <cmd_parser_detail::Supported T>
+    CmdParser &add_option(const Item &option, const std::string &desc,
+                          bool required, T default_value,
+                          std::function<bool(T)> checker) {
         check_and_update_names(option);
 
         auto checker_wrapper = [checker](const std::string &value_str) {
-            auto parsed = mparser_detail::case_string_to<T>(value_str);
+            auto parsed = cmd_parser_detail::case_string_to<T>(value_str);
             if (!parsed.has_value()) { return false; }  // 转换失败
             return checker(parsed.value());             // 检查
         };
 
-        std::string type_id = mparser_detail::get_type_id<T>();
+        std::string type_id = cmd_parser_detail::get_type_id<T>();
         std::string usage_str =
-            mparser_detail::get_usage_str<T>(option.full_name);
+            cmd_parser_detail::get_usage_str<T>(option.full_name);
         std::string default_value_str =
-            mparser_detail::get_default_value_str<T>(default_value);
+            cmd_parser_detail::get_default_value_str<T>(default_value);
 
         m_options.insert({option, OptionInfo{
                                       .checker = checker_wrapper,
@@ -189,20 +189,20 @@ public:
     }
 
     // 添加选项，提供参数检查函数
-    template <mparser_detail::Supported T>
-    MParser &add_option(const Item &option, const std::string &desc,
-                        bool required, std::function<bool(T)> checker) {
+    template <cmd_parser_detail::Supported T>
+    CmdParser &add_option(const Item &option, const std::string &desc,
+                          bool required, std::function<bool(T)> checker) {
         check_and_update_names(option);
 
         auto checker_wrapper = [checker](const std::string &value_str) {
-            auto parsed = mparser_detail::case_string_to<T>(value_str);
+            auto parsed = cmd_parser_detail::case_string_to<T>(value_str);
             if (!parsed.has_value()) { return false; }  // 转换失败
             return checker(parsed.value());             // 检查
         };
 
         std::string usage_str =
-            mparser_detail::get_usage_str<T>(option.full_name);
-        std::string type_id = mparser_detail::get_type_id<T>();
+            cmd_parser_detail::get_usage_str<T>(option.full_name);
+        std::string type_id = cmd_parser_detail::get_type_id<T>();
 
         m_options.insert({option, OptionInfo{
                                       .checker = checker_wrapper,
@@ -218,17 +218,17 @@ public:
     }
 
     // 添加选项，提供变量默认值，自动生成参数检查函数
-    template <mparser_detail::Supported T>
-    MParser &add_option(const Item &option, const std::string &desc,
-                        bool required, T default_value) {
+    template <cmd_parser_detail::Supported T>
+    CmdParser &add_option(const Item &option, const std::string &desc,
+                          bool required, T default_value) {
         return add_option<T>(option, desc, required, default_value,
                              [](T) { return true; });
     }
 
     // 添加选项，自动生成参数检查函数
-    template <mparser_detail::Supported T>
-    MParser &add_option(const Item &option, const std::string &desc,
-                        bool required) {
+    template <cmd_parser_detail::Supported T>
+    CmdParser &add_option(const Item &option, const std::string &desc,
+                          bool required) {
         return add_option<T>(option, desc, required, [](T) { return true; });
     }
 
@@ -242,10 +242,10 @@ public:
     }
 
     // 获取选项最后设置的值，如果选项名称不存在，或者类型不匹配，返回空
-    template <mparser_detail::Supported T>
+    template <cmd_parser_detail::Supported T>
     std::optional<T> get_option(const std::string &name) {
         if (const auto *p_option = get_option_via_name(name)) {  // 要求名称存在
-            std::string cur_type_id = mparser_detail::get_type_id<T>();
+            std::string cur_type_id = cmd_parser_detail::get_type_id<T>();
             if (m_options.at(*p_option).type_id
                 == cur_type_id) {  // 要求类型一致
                 auto &value_list = m_options.at(*p_option).value_list;
@@ -255,17 +255,17 @@ public:
 
                 // 获取最后一个值
                 auto last_value_str = value_list.back();
-                return mparser_detail::case_string_to<T>(last_value_str);
+                return cmd_parser_detail::case_string_to<T>(last_value_str);
             }
         }
         return std::nullopt;
     }
 
     // 获取选项所有设置的值，如果选项名称不存在，或者类型不匹配，返回空
-    template <mparser_detail::Supported T>
+    template <cmd_parser_detail::Supported T>
     std::optional<std::vector<T>> get_option_all(const std::string &name) {
         if (const auto *p_option = get_option_via_name(name)) {  // 要求名称存在
-            std::string cur_type_id = mparser_detail::get_type_id<T>();
+            std::string cur_type_id = cmd_parser_detail::get_type_id<T>();
             if (m_options.at(*p_option).type_id
                 == cur_type_id) {  // 要求类型一致
                 auto &value_list = m_options.at(*p_option).value_list;
@@ -276,7 +276,7 @@ public:
                 // 获取所有的值
                 std::vector<T> result;
                 for (auto &value_str : value_list) {
-                    auto parsed = mparser_detail::case_string_to<T>(value_str);
+                    auto parsed = cmd_parser_detail::case_string_to<T>(value_str);
                     if (!parsed.has_value()) { return std::nullopt; }
                     result.push_back(parsed.value());
                 }
@@ -386,19 +386,19 @@ public:
     const std::vector<std::string> &get_rest() const { return m_rest; }
 
     // 设置程序名称（如果没有设置，在parse阶段会自动尝试获取）
-    MParser &set_program_name(const std::string &program_name) {
+    CmdParser &set_program_name(const std::string &program_name) {
         m_program_name = program_name;
         return *this;
     }
 
     // 解析时使用严格模式
-    MParser &enable_strict_mode() {
+    CmdParser &enable_strict_mode() {
         m_strict_mode = true;
         return *this;
     }
 
     // 解析时关闭严格模式
-    MParser &disable_strict_mode() {
+    CmdParser &disable_strict_mode() {
         m_strict_mode = false;
         return *this;
     }
@@ -563,18 +563,18 @@ private:
             return true;
         }
         catch (const std::exception &e) {
-            std::cerr << "MParser error: " << e.what() << '\n';
+            std::cerr << "CmdParser error: " << e.what() << '\n';
             return false;
         }
     }
 
     const Item *get_flag_via_name(const std::string &name) const {
-        if (mparser_detail::is_valid_full_name(name)) {
+        if (cmd_parser_detail::is_valid_full_name(name)) {
             for (const auto &[flag, _] : m_flags) {
                 if (flag.full_name == name) { return &flag; }
             }
         }
-        else if (mparser_detail::is_valid_short_name(name)) {
+        else if (cmd_parser_detail::is_valid_short_name(name)) {
             for (const auto &[flag, _] : m_flags) {
                 if (flag.short_name == name) { return &flag; }
             }
@@ -583,12 +583,12 @@ private:
     }
 
     const Item *get_option_via_name(const std::string &name) const {
-        if (mparser_detail::is_valid_full_name(name)) {
+        if (cmd_parser_detail::is_valid_full_name(name)) {
             for (const auto &[option, _] : m_options) {
                 if (option.full_name == name) { return &option; }
             }
         }
-        else if (mparser_detail::is_valid_short_name(name)) {
+        else if (cmd_parser_detail::is_valid_short_name(name)) {
             for (const auto &[option, _] : m_options) {
                 if (option.short_name == name) { return &option; }
             }
@@ -598,7 +598,7 @@ private:
 
     void check_and_update_names(const Item &item) {
         if (m_unique_names.find(item.full_name) != m_unique_names.end()) {
-            std::cerr << "MParser error: " << item.full_name
+            std::cerr << "CmdParser error: " << item.full_name
                       << " already exists.";
             exit(1);
         }
@@ -606,7 +606,7 @@ private:
 
         if (!item.short_name.empty()) {
             if (m_unique_names.find(item.short_name) != m_unique_names.end()) {
-                std::cerr << "MParser error: " << item.short_name
+                std::cerr << "CmdParser error: " << item.short_name
                           << " already exists.";
                 exit(1);
             }
