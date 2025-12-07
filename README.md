@@ -1,14 +1,14 @@
 # Allay
 
-Allay is a collection of small C++ tools for practice, provided as header-only libraries unless otherwise specified.
+一组纯头文件的现代 C++ 小组件。
 
-- **mtest**: A header-only testing framework in the style of gtest.
-- **mlog**:  A simple logging library. (TODO: refactor)
-- **data_handler**: A component for reading and writing data files.
-- **cmd_parser**: A simple cmd parser.
-- **ini_parser**: A simple INI file parser.
-- **progress**: A simple command-line progress bar display. (TODO: refactor)
-- **console**: A Windows-specific utility for handling console input/output with UTF-8 encoding and virtual terminal sequences. ([reference 1](https://chariri.moe/archives/408/windows-cin-read-utf8/), [reference 2](https://stackoverflow.com/questions/48176431/reading-utf-8-characters-from-console))
+- **mtest**: 模仿 gtest 的 header-only 测试框架
+- **mlog**:  简单的日志库 （TODO: 需要重写, 参考: spdlog, [superlxh02/FastLog](https://github.com/superlxh02/FastLog)）
+- **data_handler**: 基于模板编程的数据文件读写
+- **cmd_parser**: 命令行参数解析
+- **ini_parser**: INI 文件解析
+- **progress**: 命令行进度条 （TODO: 需要重构）
+- **console**: 为 Windows 控制台应用提供 utf8 输入支持 （参考 [reference 1](https://chariri.moe/archives/408/windows-cin-read-utf8/), [reference 2](https://stackoverflow.com/questions/48176431/reading-utf-8-characters-from-console)）
 
 ---
 
@@ -18,31 +18,24 @@ Allay is a collection of small C++ tools for practice, provided as header-only l
 | gcc      | 13.0.0  | -std=c++20 |
 | MSVC     | 2022    | /std:c++20 |
 
-
-generate and build (cmake version >= 3.15)
+构建 -> 编译 -> 测试 -> 安装
 ```bash
+# generate
 cmake -S . -B build
-cmake --build ./build -j8
-```
 
-test
-```bash
+# build
+cmake --build ./build -j8
+
+# test
 cd ./build
 ctest -j8
-```
 
-run
-```bash
-./bin/xxx_demo
-```
-
-install
-```bash
+# install
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="~/.local/"
 cmake --build build --target install
 ```
 
-usage
+在其他 cmake 项目中使用
 ```cmake
 find_package(allay QUIET)
 if(NOT allay_FOUND)
