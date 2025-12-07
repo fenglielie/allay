@@ -9,7 +9,30 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 zero_setup()
 zero_check()
 
-zero_add_subdirs(src RECURSE)
+
+set(ALLAY_TARGETS
+    mtest
+    mlog
+    data_handler
+    ini_parser
+    cmd_parser
+    progress
+)
+
+set(ALLAY_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+foreach(target ${ALLAY_TARGETS})
+    add_library(${target} INTERFACE)
+    target_include_directories(${target}
+        INTERFACE
+        $<BUILD_INTERFACE:${ALLAY_INCLUDE_DIR}>
+        $<INSTALL_INTERFACE:include>
+    )
+
+    add_library(allay::${target} ALIAS ${target})
+    zero_check_target(${target})
+endforeach()
+
 
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     include(CTest)
@@ -27,18 +50,6 @@ int main() {
     endif()
 endif()
 
-set(ALLAY_TARGETS
-    mtest
-    mlog
-    data_handler
-    ini_parser
-    cmd_parser
-    progress
-)
-
-foreach(target ${ALLAY_TARGETS})
-    add_library(allay::${target} ALIAS ${target})
-endforeach()
 
 install(TARGETS ${ALLAY_TARGETS} EXPORT allayTargets)
 install(EXPORT allayTargets
