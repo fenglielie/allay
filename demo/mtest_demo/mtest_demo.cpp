@@ -1,5 +1,4 @@
 #include "allay/mtest/mtest.hpp"
-#include "allay/mtest/mtest_macro.hpp"
 
 namespace {
 
