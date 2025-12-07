@@ -5,382 +5,293 @@
 #include <cmath>
 #include <format>
 #include <iostream>
-#include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
-// 输出基类
-class Formatter {
+class ColorGradient {
 public:
-    struct Args {
-        double pct;
-        double time_cost;
-        double time_left;
-        double rate;
-        bool color_enabled;
+    struct RGB {
+        int r;
+        int g;
+        int b;
     };
 
-    virtual ~Formatter() = default;
+    ColorGradient() = default;
 
-    virtual std::string showline(Args args) {
-        if (args.color_enabled) {
-            return color_str(std::format("{:6.2f}%", args.pct * 100), args.pct,
-                             GradientType::Energy);
-        }
+    explicit ColorGradient(std::vector<RGB> colors)
+        : m_colors(std::move(colors)) {}
 
-        return std::format("{:6.2f}%", args.pct * 100);
+    explicit ColorGradient(RGB color) : ColorGradient(std::vector{color}) {}
+
+    std::string prefix(double pct) const {
+        pct = std::clamp(pct, 0.0, 1.0);
+
+        if (m_colors.empty()) { return ""; }
+
+        if (m_colors.size() == 1) { return rgb_to_ansi(m_colors[0]); }
+
+        double seg = 1.0 / static_cast<double>(m_colors.size() - 1);
+        size_t idx =
+            std::min(static_cast<size_t>(pct / seg), m_colors.size() - 2);
+
+        double local_t =
+            static_cast<double>(pct - static_cast<double>(idx) * seg) / seg;
+
+        RGB c1 = m_colors[idx];
+        RGB c2 = m_colors[idx + 1];
+
+        RGB c = interpolate(c1, c2, local_t);
+        return rgb_to_ansi(c);
     }
 
-    static std::string time_str(double dt) {
-        if (dt < 3600) {
-            // 小于 1 小时，显示 mm:ss
-            int minutes = static_cast<int>(dt) / 60;
-            int seconds = static_cast<int>(dt) % 60;
-            return std::format("{:02}:{:02}", minutes, seconds);
-        }
-        if (dt < 86400) {
-            // 小于 24 小时，显示 hh:mm:ss
-            int hours = static_cast<int>(dt) / 3600;
-            int minutes = (static_cast<int>(dt) % 3600) / 60;
-            int seconds = static_cast<int>(dt) % 60;
-            return std::format("{:02}:{:02}:{:02}", hours, minutes, seconds);
-        }
-        // 超过 24 小时，直接显示 >xxh
-        return std::format(">{}h", static_cast<int>(dt / 3600));
+    static std::string suffix() { return "\033[0m"; }
+
+    std::string colorful(std::string msg, double pct) const {
+        return prefix(pct) + msg + suffix();
     }
 
-    // 颜色渐变类别
-    enum class GradientType {
-        Heatmap,    // 红 -> 黄 -> 绿
-        Cool,       // 蓝 -> 紫 -> 粉
-        Grayscale,  // 深灰 -> 亮灰 -> 白
-        Energy      // 红 -> 紫 -> 蓝
-    };
-
-    // 生成彩色字符串
-    static std::string color_str(const std::string &msg, double pct,
-                                 GradientType type) {
-        int r = 0;
-        int g = 0;
-        int b = 0;
-
-        switch (type) {
-        case GradientType::Heatmap: {  // 红 -> 黄 -> 绿
-            if (pct < 0.5) {
-                r = 255;
-                g = static_cast<int>(255 * (pct / 0.5));
-                b = 0;
-            }
-            else {
-                r = static_cast<int>(255 * (1 - (pct - 0.5) / 0.5));
-                g = 255;
-                b = 0;
-            }
-            break;
-        }
-        case GradientType::Cool: {  // 蓝 -> 紫 -> 粉
-            if (pct < 0.5) {
-                r = static_cast<int>(128 * (pct / 0.5));
-                g = 0;
-                b = static_cast<int>(255 - (127 * (pct / 0.5)));
-            }
-            else {
-                r = static_cast<int>(128 + 127 * ((pct - 0.5) / 0.5));
-                g = static_cast<int>(105 * ((pct - 0.5) / 0.5));
-                b = static_cast<int>(180 * ((pct - 0.5) / 0.5));
-            }
-            break;
-        }
-        case GradientType::Grayscale: {  // 深灰 -> 亮灰 -> 白
-            int value = static_cast<int>(50 + 205 * pct);
-            r = g = b = value;
-            break;
-        }
-        case GradientType::Energy: {  // 红 -> 紫 -> 蓝
-            if (pct < 0.5) {
-                r = static_cast<int>(255 * (1 - (pct / 0.5)));
-                g = 0;
-                b = static_cast<int>(255 * (pct / 0.5));
-            }
-            else {
-                r = static_cast<int>(128 * (1 - (pct - 0.5) / 0.5));
-                g = 0;
-                b = 255;
-            }
-            break;
-        }
-        default: throw std::invalid_argument("Invalid gradient type");
-        }
-
-        return std::format("\033[38;2;{};{};{}m{}\033[0m", r, g, b, msg);
-    }
-};
-
-class LongFormatter : public Formatter {
-public:
-    LongFormatter(size_t len, std::vector<std::string> status_strs,
-                  std::vector<std::string> active_strs)
-        : m_len(len), m_active_strs(std::move(active_strs)) {
-        status_prepare(status_strs);
-        bar_prepare();
+    // red -> yellow -> green
+    static ColorGradient Heat() {
+        return ColorGradient({{255, 0, 0},    // red
+                              {255, 255, 0},  // yellow
+                              {0, 255, 0}}    // green
+        );
     }
 
-    LongFormatter()
-        : LongFormatter(20, {"#", " ", "|"}, {"|", "/", "-", "\\"}) {};
-
-    ~LongFormatter() override = default;
-
-    std::string showline(Args args) override {
-        if (args.color_enabled) {
-            return std::format(
-                "\033[91m{:6.2f}%\033[0m {} \033[93m[{}<{}]\033[0m",
-                args.pct * 100,
-                color_str(pct_bar(args.pct), args.pct, GradientType::Heatmap),
-                time_str(args.time_cost), time_str(args.time_left));
-        }
-        return std::format("{:6.2f}% {} [{}<{}]", args.pct * 100,
-                           pct_bar(args.pct), time_str(args.time_cost),
-                           time_str(args.time_left));
+    // red -> purple -> blue
+    static ColorGradient Energy() {
+        return ColorGradient({
+            {255, 0, 0},    // red
+            {180, 0, 180},  // purple
+            {0, 128, 255}   // blue
+        });
     }
 
-    static std::shared_ptr<LongFormatter> create(size_t len, int style) {
-        switch (style) {
-        case 1:
-            return std::shared_ptr<LongFormatter>(
-                new LongFormatter(len, {"⣿", " ", "|", "|"},
-                                  {" ", "⡀", "⡄", "⡆", "⡇", "⡏", "⡟", "⡿"}));
-
-        case 2:
-            return std::shared_ptr<LongFormatter>(
-                new LongFormatter(len, {"█", " ", "▏", "▕"},
-                                  {" ", "▏", "▎", "▍", "▌", "▋", "▊", "▉"}));
-        case 3:
-            return std::shared_ptr<LongFormatter>(
-                new LongFormatter(len, {"█", " ", "▏", "▕"},
-                                  {"▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"}));
-        case 0:
-        default:
-            return std::shared_ptr<LongFormatter>(
-                new LongFormatter(len, {"#", " ", "|"}, {"|", "/", "-", "\\"}));
-        }
+    // deep blue -> cyan -> light green
+    static ColorGradient Ocean() {
+        return ColorGradient({
+            {0, 32, 96},    // deep blue
+            {0, 128, 192},  // cyan
+            {0, 255, 128}   // light green
+        });
     }
 
 private:
-    const size_t m_len = 20;
-    std::string m_fill_str;
-    std::string m_empty_str;
-    std::string m_start_str;
-    std::string m_end_str;
-    const std::vector<std::string> m_active_strs;
+    std::vector<RGB> m_colors;
 
-    std::vector<std::string> m_lbars;
-    std::vector<std::string> m_rbars;
-
-    void status_prepare(std::vector<std::string> status_strs) {
-        size_t len = status_strs.size();
-        switch (len) {
-        case 0:
-            m_fill_str = "#";
-            m_empty_str = " ";
-            m_end_str = "|";
-            m_start_str = "";
-            break;
-        case 1:
-            m_fill_str = status_strs[0];
-            m_empty_str = " ";
-            m_end_str = "|";
-            m_start_str = "";
-            break;
-        case 2:
-            m_fill_str = status_strs[0];
-            m_empty_str = status_strs[1];
-            m_end_str = "|";
-            m_start_str = "";
-            break;
-        case 3:
-            m_fill_str = status_strs[0];
-            m_empty_str = status_strs[1];
-            m_end_str = status_strs[2];
-            m_start_str = status_strs[2];
-            break;
-        default:
-            m_fill_str = status_strs[0];
-            m_empty_str = status_strs[1];
-            m_end_str = status_strs[2];
-            m_start_str = status_strs[3];
-            break;
-        }
+    static RGB interpolate(const RGB &c1, const RGB &c2, double t) {
+        return {
+            static_cast<int>(c1.r + (c2.r - c1.r) * t),
+            static_cast<int>(c1.g + (c2.g - c1.g) * t),
+            static_cast<int>(c1.b + (c2.b - c1.b) * t),
+        };
     }
 
-    void bar_prepare() {
-        m_lbars.reserve(m_len + 1);
-        m_lbars.emplace_back("");
+    static std::string rgb_to_ansi(const RGB &c) {
+        return "\033[38;2;" + std::to_string(c.r) + ";" + std::to_string(c.g)
+               + ";" + std::to_string(c.b) + "m";
+    }
+};
 
-        m_rbars.reserve(m_len + 1);
+struct ProgressStyle {
+    size_t length = 20;
+    std::string fill = "#";
+    std::string empty = " ";
+    std::string left = "|";
+    std::string right = "|";
+    std::vector<std::string> active;
+
+    std::string prefix_desc;
+    std::string suffix_desc;
+
+    ColorGradient color_of_pct;
+    ColorGradient color_of_bar;
+    ColorGradient color_of_time;
+
+    static ProgressStyle Classic() {
+        return {.length = 20,
+                .fill = "#",
+                .empty = " ",
+                .left = "|",
+                .right = "|",
+                .active = std::vector<std::string>{"|", "/", "-", "\\"},
+                .prefix_desc = {},
+                .suffix_desc = {},
+                .color_of_pct = {},
+                .color_of_bar = {},
+                .color_of_time = {}};
+    }
+
+    static ProgressStyle Block() {
+        return {.length = 20,
+                .fill = "█",
+                .empty = " ",
+                .left = "▕",
+                .right = "▏",
+                .active = std::vector<std::string>{" ", "▏", "▎", "▍", "▌", "▋",
+                                                   "▊", "▉"},
+                .prefix_desc = {},
+                .suffix_desc = {},
+                .color_of_pct = {},
+                .color_of_bar = {},
+                .color_of_time = {}};
+    }
+
+    static ProgressStyle Braille() {
+        return {.length = 20,
+                .fill = "⣿",
+                .empty = " ",
+                .left = "|",
+                .right = "|",
+                .active = std::vector<std::string>{" ", "⡀", "⡄", "⡆", "⡇", "⡏",
+                                                   "⡟", "⡿"},
+                .prefix_desc = {},
+                .suffix_desc = {},
+                .color_of_pct = {},
+                .color_of_bar = {},
+                .color_of_time = {}};
+    }
+};
+
+class DataUpdater {
+public:
+    DataUpdater()
+        : m_start(std::chrono::steady_clock::now()), m_last(m_start) {}
+
+    bool update(double pct) {
+        if (pct < m_last_pct) return false;
+
+        auto now = std::chrono::steady_clock::now();
+        double dt = static_cast<double>(
+                        std::chrono::duration_cast<std::chrono::milliseconds>(
+                            now - m_last)
+                            .count())
+                    / 1000.0;
+
+        double cur_rate = (pct - m_last_pct) / dt;
+
+        bool bad = std::isnan(m_rate) || std::isinf(m_rate);
+        if (!m_rate_ok || bad) {
+            m_rate = cur_rate;
+            m_rate_ok = true;
+        }
+        else { m_rate = alpha * cur_rate + (1 - alpha) * m_rate; }
+
+        m_last = now;
+        m_last_pct = pct;
+        return true;
+    }
+
+    double cost() const {
+        auto d = std::chrono::duration_cast<std::chrono::milliseconds>(
+            m_last - m_start);
+        return static_cast<double>(d.count()) / 1000.0;
+    }
+
+    double left() const {
+        if (!m_rate_ok) return 0;
+        return (1.0 - m_last_pct) / m_rate;
+    }
+
+    double last_pct() const { return m_last_pct; }
+
+    double last_rate() const { return m_rate; }
+
+private:
+    static constexpr double alpha = 0.4;
+
+    std::chrono::steady_clock::time_point m_start;
+    std::chrono::steady_clock::time_point m_last;
+
+    double m_last_pct = 0;
+    double m_rate = 0;
+    bool m_rate_ok = false;
+};
+
+class Progress {
+public:
+    Progress() : Progress(ProgressStyle::Classic()) {}
+
+    explicit Progress(ProgressStyle st) : m_st(std::move(st)) {
+        m_lbars.reserve(m_st.length + 1);
+        m_lbars.emplace_back("");
+        m_rbars.reserve(m_st.length + 1);
         m_rbars.emplace_back("");
         m_rbars.emplace_back("");
 
         std::string tmp1;
         std::string tmp2;
-        for (size_t i = 1; i <= m_len; ++i) {
-            tmp1 += m_fill_str;
-            tmp2 += m_empty_str;
-
+        for (size_t i = 1; i <= m_st.length; i++) {
+            tmp1 += m_st.fill;
+            tmp2 += m_st.empty;
             m_lbars.push_back(tmp1);
             m_rbars.push_back(tmp2);
         }
     }
 
-    std::string pct_bar(double pct) {
-        size_t n =
-            std::clamp(static_cast<size_t>(pct * static_cast<double>(m_len)),
-                       static_cast<size_t>(0), m_len);
+    void update(double pct) {
+        m_upt.update(pct);
 
-        double block_pct = 1.0 / static_cast<double>(m_len);
+        auto msg = showline(m_upt.last_pct(), m_upt.cost(), m_upt.left(),
+                            m_upt.last_rate());
+
+        std::cout << std::format("\r {}{}{}", m_st.prefix_desc, msg,
+                                 m_st.suffix_desc)
+                  << std::flush;
+    }
+
+    static void nextline() { std::cout << "\n"; }
+
+private:
+    DataUpdater m_upt;
+    ProgressStyle m_st;
+    std::vector<std::string> m_lbars;
+    std::vector<std::string> m_rbars;
+
+    std::string pct_bar(double pct) {
+        size_t len = m_st.length;
+        size_t n =
+            std::clamp(static_cast<size_t>(pct * static_cast<double>(len)),
+                       static_cast<size_t>(0), len);
+
+        double block_pct = 1.0 / static_cast<double>(len);
         double rest_pct = pct - block_pct * static_cast<int>(n);
         std::string last_str;
 
-        if (!m_active_strs.empty() && n < m_len) {
-            auto idx =
-                static_cast<size_t>(static_cast<double>(m_active_strs.size())
-                                    * rest_pct / block_pct);
-            last_str = m_active_strs[idx];
+        if (!m_st.active.empty() && n < len) {
+            auto idx = static_cast<size_t>(
+                static_cast<double>(m_st.active.size()) * rest_pct / block_pct);
+            last_str = m_st.active[idx];
         }
 
-        return m_start_str + m_lbars[n] + last_str + m_rbars[m_len - n]
-               + m_end_str;
+        return m_st.left + m_lbars[n] + last_str + m_rbars[len - n]
+               + m_st.right;
     }
-};
 
-class Progress {
-public:
-    // 数据记录和更新类
-    class DataUpdater {
-    public:
-        DataUpdater()
-            : m_start_time(std::chrono::steady_clock::now()),
-              m_last_time(m_start_time) {}
-
-        bool update(double pct) {
-            if (pct < m_last_pct) { return false; }
-
-            auto time_now = std::chrono::steady_clock::now();
-
-            // Time prediction
-            auto duration =
-                std::chrono::duration_cast<std::chrono::milliseconds>(
-                    time_now - m_last_time);
-            double elapsed_time =
-                static_cast<double>(duration.count()) / 1000.0;
-
-            // Progress rate
-            double cur_rate = (pct - m_last_pct) / elapsed_time;
-
-            // If m_last_rate is illegal, use cur_rate only.
-            bool illegal_flag =
-                std::isinf(m_last_rate) || std::isnan(m_last_rate);
-
-            if (!m_rate_setted || illegal_flag) {
-                m_last_rate = cur_rate;
-                m_rate_setted = true;
-            }
-            else {  // Apply exponential smoothing
-                m_last_rate = alpha * cur_rate + (1 - alpha) * m_last_rate;
-            }
-
-            // Update
-            m_last_time = time_now;
-            m_last_pct = pct;
-
-            return true;
+    static std::string time_str(double dt) {
+        if (dt < 3600) {
+            return std::format("{:02}:{:02}", static_cast<int>(dt / 60),
+                               static_cast<int>(dt) % 60);
         }
-
-        double get_time_cost() const {
-            auto cost_duration =
-                std::chrono::duration_cast<std::chrono::milliseconds>(
-                    m_last_time - m_start_time);
-            double cost_time =
-                static_cast<double>(cost_duration.count()) / 1000.0;
-
-            return cost_time;  // seconds
+        if (dt < 86400) {
+            return std::format("{:02}:{:02}:{:02}", static_cast<int>(dt / 3600),
+                               (static_cast<int>(dt) % 3600) / 60,
+                               static_cast<int>(dt) % 60);
         }
-
-        double get_time_left() const {
-            if (m_rate_setted) { return (1.0 - m_last_pct) / m_last_rate; }
-
-            return 0;
-        }
-
-    private:
-        static constexpr double alpha = 0.4;  // Smoothing factor
-
-        const std::chrono::steady_clock::time_point m_start_time;
-
-        std::chrono::steady_clock::time_point m_last_time;
-        double m_last_pct = 0;
-        double m_last_rate = 0.0;
-
-        bool m_rate_setted = false;
-
-        friend class Progress;
-    };
-
-    Progress()
-        : Progress(std::make_shared<Formatter>(), std::make_shared<DataUpdater>()) {
+        return std::format(">{}h", static_cast<int>(dt / 3600));
     }
 
-    explicit Progress(std::shared_ptr<Formatter> ptr_formatter)
-        : Progress(ptr_formatter, std::make_shared<DataUpdater>()) {}
+    std::string showline(double pct, double time_cost, double time_left,
+                         double rate) {
+        auto bar = pct_bar(pct);
 
-    Progress(std::shared_ptr<Formatter> ptr_formatter,
-         std::shared_ptr<DataUpdater> ptr_updater)
-        : m_ptr_formatter(std::move(ptr_formatter)),
-          m_ptr_updater(std::move(ptr_updater)) {}
+        auto result = std::format(
+            "{}{:6.2f}%{} {}{}{} {}[{}<{}]{}", m_st.color_of_pct.prefix(pct),
+            pct * 100, ColorGradient::suffix(), m_st.color_of_bar.prefix(pct),
+            bar, ColorGradient::suffix(), m_st.color_of_time.prefix(pct),
+            time_str(time_cost), time_str(time_left), ColorGradient::suffix());
 
-    void update(double arg) {
-        if (m_ptr_formatter == nullptr) { return; }
-
-        m_ptr_updater->update(arg);
-
-        if (m_ptr_formatter != nullptr) {
-            auto msg = m_ptr_formatter->showline(
-                {.pct = m_ptr_updater->m_last_pct,
-                 .time_cost = m_ptr_updater->get_time_cost(),
-                 .time_left = m_ptr_updater->get_time_left(),
-                 .rate = m_ptr_updater->m_last_rate,
-                 .color_enabled = m_color_enabled});
-
-            std::cout << std::format("\r {}{}", m_desc, msg) << std::flush;
-        }
+        return result;
     }
-
-    static void nextline() { std::cout << std::endl; }
-
-    Progress &enable_color() {
-        m_color_enabled = true;
-        return *this;
-    }
-
-    Progress &disable_color() {
-        m_color_enabled = false;
-        return *this;
-    }
-
-    Progress &set_desc(const std::string &desc) {
-        m_desc = desc;
-        return *this;
-    }
-
-    double get_time_cost() const {
-        if (m_ptr_formatter == nullptr) { return 0; }
-
-        return m_ptr_updater->get_time_cost();
-    }
-
-private:
-    std::shared_ptr<Formatter> m_ptr_formatter;
-    std::shared_ptr<DataUpdater> m_ptr_updater;
-
-    std::string m_desc;
-    bool m_color_enabled = false;
 };
