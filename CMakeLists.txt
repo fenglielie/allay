@@ -34,7 +34,6 @@ set(ALLAY_TARGETS
     ini_parser
     cmd_parser
     progress
-    console
 )
 
 foreach(target ${ALLAY_TARGETS})

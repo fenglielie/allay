@@ -8,7 +8,6 @@
 - **cmd_parser**: 命令行参数解析
 - **ini_parser**: INI 文件解析
 - **progress**: 命令行进度条 （TODO: 需要重构）
-- **console**: 为 Windows 控制台应用提供 utf8 输入支持 （参考 [reference 1](https://chariri.moe/archives/408/windows-cin-read-utf8/), [reference 2](https://stackoverflow.com/questions/48176431/reading-utf-8-characters-from-console)）
 
 ---
 
