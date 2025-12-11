@@ -3,10 +3,9 @@
 一组纯头文件的现代 C++ 小组件，实现的都是非常基础的，其他语言直接自带的功能。
 
 - **mtest**: 模仿 gtest 的 header-only 测试框架
-- **mlog**:  简单的日志库 （TODO: 需要重写, 参考: spdlog, [superlxh02/FastLog](https://github.com/superlxh02/FastLog)）
+- **mlog**:  简单的日志库 （TODO: 需要优化, 可以参考这些实现进行重写: spdlog, [superlxh02/FastLog](https://github.com/superlxh02/FastLog)）
 - **cmd_parser**: 命令行参数解析
 - **ini_parser**: INI 文件解析
-- **data_record_io**: 基于模板编程的数据文件读写
 - **progress**: 命令行进度条
 
 ---

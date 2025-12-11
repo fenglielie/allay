@@ -13,7 +13,6 @@ zero_check()
 set(ALLAY_TARGETS
     mtest
     mlog
-    data_record_io
     ini_parser
     cmd_parser
     progress
