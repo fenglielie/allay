@@ -1,6 +1,7 @@
 #ifndef MTEST_H_
 #define MTEST_H_
 
+#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -15,9 +16,12 @@ class MTest {
 public:
     using FuncType = void(int *);
 
+    enum class ColorFlag { AUTO, YES, NO };
+
     // test item
     struct TestItem {
         bool match_filter{false};
+        bool disabled{false};
         bool success{true};  // test result
         FuncType *f;
         const char *itemname;
@@ -216,8 +220,11 @@ private:
 
             const TestSet &test_set = it->second;
             for (size_t i = 0; i < test_set.size(); i++) {
-                if (test_set[i].match_filter)
-                    msg_even_brief() << "  " << test_set[i].itemname << '\n';
+                if (test_set[i].match_filter) {
+                    msg_even_brief() << "  " << test_set[i].itemname;
+                    if (test_set[i].disabled) msg_even_brief() << " (DISABLED)";
+                    msg_even_brief() << '\n';
+                }
             }
         }
 
@@ -232,7 +239,7 @@ private:
         msg_even_brief()
             << "This program contains tests written using MTest.\n"
             << "MTest is a gtest-style simple test framework by "
-               "fenglielie@qq.com.\n"
+               "fenglielie<fenglielie@qq.com>.\n"
             << "You can use the following command line flags to control "
                "its behavior:\n\n";
         msg_even_brief()
@@ -244,11 +251,13 @@ private:
         msg_even_brief()
             << "2. --mtest_list_tests\n"
             << "   List the names of all tests without running them.\n"
-            << "The name of TEST(Foo, Bar) is \"Foo.Bar\".\n";
-        msg_even_brief() << "3. --mtest_disable_color\n"
-                         << "   Disable colorful output.\n";
+            << "   The name of TEST(Foo, Bar) is \"Foo.Bar\".\n";
+        msg_even_brief() << "3. --mtest_color=yes|no|auto\n"
+                         << "   Enable of disable colorful output.\n";
         msg_even_brief() << "4. --mtest_brief\n"
                          << "   Enable brief output.\n";
+        msg_even_brief() << "5. --mtest_also_run_disabled_tests\n"
+                         << "   Run disabled tests.\n";
 
         msg_even_brief() << '\n';
         exit(0);
@@ -301,7 +310,7 @@ private:
                     }
                 }
             }
-            if (m_use_color) {
+            if (should_use_color(m_color_flag)) {
                 msg_even_brief()
                     << "\n " << m_color_red
                     << make_proper_str(m_test_fail_count, "FAILED TEST", true)
@@ -317,7 +326,7 @@ private:
     }
 
     void show_logo() const {
-        if (m_use_color) {
+        if (should_use_color(m_color_flag)) {
             msg() << m_color_green << "\
       __  __ _____ _____ ____ _____ \n\
      |  \\/  |_   _| ____/ ___|_   _|\n\
@@ -338,7 +347,7 @@ private:
     }
 
     MTestMessage &info_passed() const {
-        if (m_use_color) {
+        if (should_use_color(m_color_flag)) {
             msg_even_brief() << m_color_green << "[  PASSED  ] " << m_color_end;
         }
         else { msg_even_brief() << "[  PASSED  ] "; }
@@ -346,7 +355,7 @@ private:
     }
 
     MTestMessage &info_failed() const {
-        if (m_use_color) {
+        if (should_use_color(m_color_flag)) {
             msg_even_brief() << m_color_red << "[  FAILED  ] " << m_color_end;
         }
         else { msg_even_brief() << "[  FAILED  ] "; }
@@ -354,7 +363,7 @@ private:
     }
 
     MTestMessage &info_ok() const {
-        if (m_use_color) {
+        if (should_use_color(m_color_flag)) {
             msg() << m_color_green << "[       OK ] " << m_color_end;
         }
         else { msg() << "[       OK ] "; }
@@ -362,7 +371,7 @@ private:
     }
 
     MTestMessage &info_two() const {
-        if (m_use_color) {
+        if (should_use_color(m_color_flag)) {
             msg_even_brief() << m_color_green << "[==========] " << m_color_end;
         }
         else { msg_even_brief() << "[==========] "; }
@@ -370,7 +379,7 @@ private:
     }
 
     MTestMessage &info_one() const {
-        if (m_use_color) {
+        if (should_use_color(m_color_flag)) {
             msg() << m_color_green << "[----------] " << m_color_end;
         }
         else { msg() << "[----------] "; }
@@ -378,7 +387,7 @@ private:
     }
 
     MTestMessage &info_run() const {
-        if (m_use_color) {
+        if (should_use_color(m_color_flag)) {
             msg() << m_color_green << "[ RUN      ] " << m_color_end;
         }
         else { msg() << "[ RUN      ] "; }
@@ -389,6 +398,12 @@ private:
                        FuncType *f, const char *test_fullname) noexcept {
         try {
             TestItem item(f, test_itemname, test_fullname);
+
+            if (starts_with(test_set_name, "DISABLED_")
+                || starts_with(test_itemname, "DISABLED_")) {
+                item.disabled = true;
+            }
+
             m_test_sets[test_set_name].emplace_back(item);
         }
         catch (...) {
@@ -401,20 +416,48 @@ private:
 
     void set_main_file(const char *main_file) { m_main_file = main_file; }
 
+    static std::string adapt_gtest_argv(const std::string &arg) {
+        if (arg.rfind("--gtest_filter=", 0) == 0)
+            return "--mtest_filter=" + arg.substr(15);
+
+        if (arg.rfind("--gtest_color=", 0) == 0)
+            return "--mtest_color=" + arg.substr(14);
+
+        if (arg == "--gtest_list_tests") return "--mtest_list_tests";
+
+        if (arg == "--gtest_brief") return "--mtest_brief";
+
+        if (arg == "--gtest_also_run_disabled_tests")
+            return "--mtest_also_run_disabled_tests";
+
+        return arg;
+    }
+
+    static bool should_use_color(ColorFlag flag) {
+        if (flag == ColorFlag::YES) return true;
+        if (flag == ColorFlag::NO) return false;
+
+        return true;  // AUTO -> true
+    }
+
     void set_from_argv(int argc, char *argv[]) {
         if (argc == 1) return;
 
         const std::string filter_prefix = "--mtest_filter=";
+        const std::string color_prefix = "--mtest_color=";
         const std::string list_tests_option = "--mtest_list_tests";
-        const std::string disable_color_option = "--mtest_disable_color";
-        const std::string help_option = "--help";
+        const std::string help_option1 = "--help";
+        const std::string help_option2 = "-h";
+        const std::string help_option3 = "-?";
         const std::string brief_option = "--mtest_brief";
+        const std::string also_run_disabled_option =
+            "--mtest_also_run_disabled_tests";
 
         std::string arg_str;
         bool is_filter_override = false;
 
         for (int i = 1; i < argc; i++) {
-            arg_str = argv[i];
+            arg_str = adapt_gtest_argv(argv[i]);
 
             if (starts_with(arg_str, filter_prefix)) {  // filter
                 if (!m_filter.empty()) is_filter_override = true;
@@ -423,23 +466,72 @@ private:
                 set_filter(arg_str, true);  // force update
                 set_matched_count();
             }
-            else if (arg_str == disable_color_option)
-                m_use_color = false;  // default: false
+            else if (starts_with(arg_str, color_prefix)) {
+                std::string v = arg_str.substr(color_prefix.size());
+                std::transform(v.begin(), v.end(), v.begin(),
+                               [](unsigned char c) { return std::tolower(c); });
+
+                if (v == "yes" || v == "on" || v == "true" || v == "1") {
+                    m_color_flag = ColorFlag::YES;
+                }
+                else if (v == "no" || v == "off" || v == "false" || v == "0") {
+                    m_color_flag = ColorFlag::NO;
+                }
+                else if (v == "auto" || v == "default") {
+                    m_color_flag = ColorFlag::AUTO;
+                }
+                else {
+                    if (should_use_color(m_color_flag)) {
+                        msg_even_brief()
+                            << m_color_yellow
+                            << "Warning: unknown value for --mtest_color: " << v
+                            << ", use auto.\n"
+                            << m_color_end;
+                    }
+                    else {
+                        msg_even_brief()
+                            << "Warning: unknown value for --mtest_color: " << v
+                            << ", use auto.\n";
+                    }
+
+                    m_color_flag = ColorFlag::AUTO;
+                }
+            }
             else if (arg_str == brief_option)
                 MTestMessage::brief_output() = true;  // default: false
             else if (arg_str == list_tests_option)
                 list_and_exit();
-            else if (arg_str == help_option)
+            else if (arg_str == help_option1 || arg_str == help_option2
+                     || arg_str == help_option3)
                 help_and_exit();
+            else if (arg_str == also_run_disabled_option)
+                m_run_disabled = true;
             else {
-                msg_even_brief() << "Note: Unknown flag(" << arg_str
-                                 << ") will be ignored.\n";
+                if (should_use_color(m_color_flag)) {
+                    msg_even_brief()
+                        << m_color_yellow << "Warning: Unknown flag(" << arg_str
+                        << ") will be ignored.\n"
+                        << m_color_end;
+                }
+                else {
+                    msg_even_brief() << "Warning: Unknown flag(" << arg_str
+                                     << ") will be ignored.\n";
+                }
             }
         }
 
-        if (is_filter_override)
-            msg_even_brief()
-                << "Note: MTest filter will be override by the last one.";
+        if (is_filter_override) {
+            if (should_use_color(m_color_flag)) {
+                msg_even_brief()
+                    << m_color_yellow
+                    << "Warning: MTest filter will be override by the last one."
+                    << m_color_end;
+            }
+            else {
+                msg_even_brief() << "Warning: MTest filter will be override by "
+                                    "the last one.";
+            }
+        }
     }
 
     // update matched_count_items and matched_count_sets.
@@ -453,6 +545,11 @@ private:
 
             int count = 0;
             for (size_t i = 0; i < test_set.size(); i++) {
+                if (test_set[i].disabled && !m_run_disabled) {
+                    test_set[i].match_filter = false;
+                    continue;
+                }
+
                 std::string fullname = test_set[i].fullname;
                 if (str_match(fullname, m_filter)) {
                     ++count;
@@ -528,6 +625,7 @@ private:
 
     const char *m_color_red = "\x1b[91m";
     const char *m_color_green = "\x1b[92m";
+    const char *m_color_yellow = "\x1b[93m";
     const char *m_color_end = "\x1b[0m";
 
     std::map<const char *, TestSet> m_test_sets;
@@ -535,8 +633,10 @@ private:
     clock_t m_cost_time_all{0};
 
     std::string m_filter;
-    std::string m_main_file;  // The file name of main().
-    bool m_use_color{true};   // Use colored output.
+    std::string m_main_file;     // The file name of main().
+    bool m_run_disabled{false};  // Run disabled test items.
+
+    ColorFlag m_color_flag{ColorFlag::AUTO};
 
     int m_matched_count_items{0};  // Number of test items matched the filter.
     int m_matched_count_sets{0};   // Number of test sets matched the filter.
@@ -586,7 +686,7 @@ private:
             << "Expected: (" << #x << ") "                                     \
             << " ~ "                                                           \
             << " (" << #y << "), actual: " << std::to_string(x) << " vs "      \
-            << std::to_string(y) << "(" << (precision) << ")\n";                 \
+            << std::to_string(y) << "(" << (precision) << ")\n";               \
         *tmp_fail_count = *tmp_fail_count + 1;                                 \
     }                                                                          \
     else { MTest::MTestMessage::expect_result() = true; }                      \
