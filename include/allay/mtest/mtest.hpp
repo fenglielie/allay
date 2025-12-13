@@ -310,87 +310,63 @@ private:
                     }
                 }
             }
-            if (should_use_color(m_color_flag)) {
-                msg_even_brief()
-                    << "\n " << m_color_red
-                    << make_proper_str(m_test_fail_count, "FAILED TEST", true)
-                    << m_color_end << '\n';
-            }
-            else {
-                msg_even_brief()
-                    << "\n "
-                    << make_proper_str(m_test_fail_count, "FAILED TEST", true)
-                    << '\n';
-            }
+
+            msg_even_brief()
+                << "\n " << get_color_prefix(m_color_red)
+                << make_proper_str(m_test_fail_count, "FAILED TEST", true)
+                << m_color_end << '\n';
         }
     }
 
     void show_logo() const {
-        if (should_use_color(m_color_flag)) {
-            msg() << m_color_green << "\
+        msg() << get_color_prefix(m_color_green) << "\
       __  __ _____ _____ ____ _____ \n\
      |  \\/  |_   _| ____/ ___|_   _|\n\
      | |\\/| | | | |  _| \\___ \\ | |\n\
      | |  | | | | | |___ ___) || |\n\
      |_|  |_| |_| |_____|____/ |_|\n"
-                  << m_color_end << '\n';
-        }
-        else {
-            msg() << "\
-      __  __ _____ _____ ____ _____ \n\
-     |  \\/  |_   _| ____/ ___|_   _|\n\
-     | |\\/| | | | |  _| \\___ \\ | |\n\
-     | |  | | | | | |___ ___) || |\n\
-     |_|  |_| |_| |_____|____/ |_|\n"
-                  << '\n';
-        }
+              << m_color_end << '\n';
     }
 
     MTestMessage &info_passed() const {
-        if (should_use_color(m_color_flag)) {
-            msg_even_brief() << m_color_green << "[  PASSED  ] " << m_color_end;
-        }
-        else { msg_even_brief() << "[  PASSED  ] "; }
+        msg_even_brief() << get_color_prefix(m_color_green) << "[  PASSED  ] "
+                         << m_color_end;
+
         return msg_even_brief();
     }
 
     MTestMessage &info_failed() const {
-        if (should_use_color(m_color_flag)) {
-            msg_even_brief() << m_color_red << "[  FAILED  ] " << m_color_end;
-        }
-        else { msg_even_brief() << "[  FAILED  ] "; }
+        msg_even_brief() << get_color_prefix(m_color_red) << "[  FAILED  ] "
+                         << m_color_end;
+
         return msg_even_brief();
     }
 
     MTestMessage &info_ok() const {
-        if (should_use_color(m_color_flag)) {
-            msg() << m_color_green << "[       OK ] " << m_color_end;
-        }
-        else { msg() << "[       OK ] "; }
+        msg() << get_color_prefix(m_color_green) << "[       OK ] "
+              << m_color_end;
+
         return msg();
     }
 
     MTestMessage &info_two() const {
-        if (should_use_color(m_color_flag)) {
-            msg_even_brief() << m_color_green << "[==========] " << m_color_end;
-        }
-        else { msg_even_brief() << "[==========] "; }
+        msg_even_brief() << get_color_prefix(m_color_green) << "[==========] "
+                         << m_color_end;
+
         return msg_even_brief();
     }
 
     MTestMessage &info_one() const {
-        if (should_use_color(m_color_flag)) {
-            msg() << m_color_green << "[----------] " << m_color_end;
-        }
-        else { msg() << "[----------] "; }
+        msg() << get_color_prefix(m_color_green) << "[----------] "
+              << m_color_end;
+
         return msg();
     }
 
     MTestMessage &info_run() const {
-        if (should_use_color(m_color_flag)) {
-            msg() << m_color_green << "[ RUN      ] " << m_color_end;
-        }
-        else { msg() << "[ RUN      ] "; }
+        msg() << get_color_prefix(m_color_green) << "[ RUN      ] "
+              << m_color_end;
+
         return msg();
     }
 
@@ -440,11 +416,17 @@ private:
         return true;  // AUTO -> true
     }
 
+    const char *get_color_prefix(const char *raw_color_prefix) const {
+        if (should_use_color(m_color_flag)) { return raw_color_prefix; }
+
+        return "";
+    }
+
     void set_from_argv(int argc, char *argv[]) {
         if (argc == 1) return;
 
-        const std::string filter_prefix = "--mtest_filter=";
-        const std::string color_prefix = "--mtest_color=";
+        const std::string filter_option = "--mtest_filter=";
+        const std::string color_option = "--mtest_color=";
         const std::string list_tests_option = "--mtest_list_tests";
         const std::string help_option1 = "--help";
         const std::string help_option2 = "-h";
@@ -459,15 +441,15 @@ private:
         for (int i = 1; i < argc; i++) {
             arg_str = adapt_gtest_argv(argv[i]);
 
-            if (starts_with(arg_str, filter_prefix)) {  // filter
+            if (starts_with(arg_str, filter_option)) {  // filter
                 if (!m_filter.empty()) is_filter_override = true;
-                arg_str.erase(0, filter_prefix.length());
+                arg_str.erase(0, filter_option.length());
 
                 set_filter(arg_str, true);  // force update
                 set_matched_count();
             }
-            else if (starts_with(arg_str, color_prefix)) {
-                std::string v = arg_str.substr(color_prefix.size());
+            else if (starts_with(arg_str, color_option)) {
+                std::string v = arg_str.substr(color_option.size());
                 std::transform(v.begin(), v.end(), v.begin(),
                                [](unsigned char c) { return std::tolower(c); });
 
@@ -481,20 +463,13 @@ private:
                     m_color_flag = ColorFlag::AUTO;
                 }
                 else {
-                    if (should_use_color(m_color_flag)) {
-                        msg_even_brief()
-                            << m_color_yellow
-                            << "Warning: unknown value for --mtest_color: " << v
-                            << ", use auto.\n"
-                            << m_color_end;
-                    }
-                    else {
-                        msg_even_brief()
-                            << "Warning: unknown value for --mtest_color: " << v
-                            << ", use auto.\n";
-                    }
-
                     m_color_flag = ColorFlag::AUTO;
+
+                    msg_even_brief()
+                        << get_color_prefix(m_color_yellow)
+                        << "Warning: unknown value for --mtest_color: " << v
+                        << ", use auto.\n"
+                        << m_color_end;
                 }
             }
             else if (arg_str == brief_option)
@@ -507,30 +482,18 @@ private:
             else if (arg_str == also_run_disabled_option)
                 m_run_disabled = true;
             else {
-                if (should_use_color(m_color_flag)) {
-                    msg_even_brief()
-                        << m_color_yellow << "Warning: Unknown flag(" << arg_str
-                        << ") will be ignored.\n"
-                        << m_color_end;
-                }
-                else {
-                    msg_even_brief() << "Warning: Unknown flag(" << arg_str
-                                     << ") will be ignored.\n";
-                }
+                msg_even_brief() << get_color_prefix(m_color_yellow)
+                                 << "Warning: Unknown flag(" << arg_str
+                                 << ") will be ignored.\n"
+                                 << m_color_end;
             }
         }
 
         if (is_filter_override) {
-            if (should_use_color(m_color_flag)) {
-                msg_even_brief()
-                    << m_color_yellow
-                    << "Warning: MTest filter will be override by the last one."
-                    << m_color_end;
-            }
-            else {
-                msg_even_brief() << "Warning: MTest filter will be override by "
-                                    "the last one.";
-            }
+            msg_even_brief()
+                << get_color_prefix(m_color_yellow)
+                << "Warning: MTest filter will be override by the last one."
+                << m_color_end;
         }
     }
 
